@@ -1,369 +1,450 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import Link from 'next/link'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import Link from "next/link";
+import {
+  SupabaseService,
+  type ExamType,
+  type Category,
+  type Option,
+  type ReportTemplate,
+} from "@/lib/supabase-dynamic";
+import {
+  AIService,
+  type PatientData,
+  type ReportGenerationData,
+} from "@/lib/ai-service";
 
-interface LaudoData {
-  paciente: string
-  idade: string
-  sexo: string
-  tecnica: string[]
-  achados: string[]
-  conclusao: string[]
-  observacoes: string
+interface CategoryWithOptions extends Category {
+  options: Option[];
 }
 
-const ToraxPage: React.FC = () => {
-  const [laudoData, setLaudoData] = useState<LaudoData>({
-    paciente: '',
-    idade: '',
-    sexo: '',
-    tecnica: [],
-    achados: [],
-    conclusao: [],
-    observacoes: ''
-  })
+const ToraxDinamicoPage: React.FC = () => {
+  // Estados principais
+  const [examType, setExamType] = useState<ExamType | null>(null);
+  const [categories, setCategories] = useState<CategoryWithOptions[]>([]);
+  const [template, setTemplate] = useState<ReportTemplate | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [laudoFinal, setLaudoFinal] = useState<string>('')
+  // Estados do formulário
+  const [patientData, setPatientData] = useState<PatientData>({
+    name: "",
+    age: "",
+    gender: "",
+  });
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [additionalNotes, setAdditionalNotes] = useState("");
 
-  // Opções pré-definidas
-  const opcoesTecnica = [
-    'Radiografia simples do tórax em incidências PA e perfil',
-    'Radiografia simples do tórax em incidência PA',
-    'Radiografia simples do tórax em incidência AP no leito',
-    'Exame realizado com técnica adequada'
-  ]
+  // Estados do laudo
+  const [reportData, setReportData] = useState<{
+    rawText: string;
+    aiProcessedText: string;
+    finalReport: string;
+  } | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [aiAvailable, setAiAvailable] = useState(true);
 
-  const opcoesAchados = [
-    'Pulmões expandidos e transparentes',
-    'Não há sinais de condensação pulmonar',
-    'Não há sinais de derrame pleural',
-    'Seios costofrênicos livres',
-    'Área cardíaca dentro dos limites da normalidade',
-    'Mediastino centrado',
-    'Estruturas ósseas íntegras',
-    'Partes moles preservadas',
-    'Opacidade em base direita',
-    'Opacidade em base esquerda',
-    'Opacidade em ápice direito',
-    'Opacidade em ápice esquerdo',
-    'Cardiomegalia',
-    'Derrame pleural à direita',
-    'Derrame pleural à esquerda',
-    'Pneumotórax à direita',
-    'Pneumotórax à esquerda'
-  ]
+  // Guards
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
-  const opcoesConclusao = [
-    'Exame radiológico do tórax sem alterações',
-    'Pneumonia em base direita',
-    'Pneumonia em base esquerda',
-    'Cardiomegalia',
-    'Derrame pleural',
-    'Pneumotórax',
-    'Sugestivo de processo inflamatório/infeccioso'
-  ]
+  // ---------- Carregamento inicial ----------
+  const loadExamData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const toggleOption = (categoria: keyof LaudoData, opcao: string) => {
-    setLaudoData(prev => {
-      const currentArray = prev[categoria] as string[]
-      const isSelected = currentArray.includes(opcao)
-      
-      return {
-        ...prev,
-        [categoria]: isSelected 
-          ? currentArray.filter(item => item !== opcao)
-          : [...currentArray, opcao]
+      const exam = await SupabaseService.getExamBySlug("torax");
+      if (!exam) throw new Error("Exame de tórax não encontrado");
+
+      // Estrutura
+      const structure = await SupabaseService.getExamStructure(exam.id);
+      // Template
+      const examTemplate = await SupabaseService.getReportTemplate(exam.id);
+
+      if (!mountedRef.current) return;
+      setExamType(exam);
+      setCategories(structure ?? []);
+      setTemplate(examTemplate ?? null);
+    } catch (err) {
+      console.error("Erro ao carregar dados:", err);
+      if (!mountedRef.current) return;
+      setError("Erro ao carregar dados do exame");
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  }, []);
+
+  const checkAIAvailability = useCallback(async () => {
+    try {
+      const available = await AIService.validateAI();
+      if (mountedRef.current) setAiAvailable(!!available);
+    } catch {
+      if (mountedRef.current) setAiAvailable(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Carrega tudo em paralelo
+    loadExamData();
+    checkAIAvailability();
+  }, [loadExamData, checkAIAvailability]);
+
+  // ---------- Ações ----------
+  const toggleOption = useCallback((optionId: string) => {
+    setSelectedOptions((prev) =>
+      prev.includes(optionId) ? prev.filter((id) => id !== optionId) : [...prev, optionId]
+    );
+  }, []);
+
+  const canGenerate = useMemo(() => {
+    return !!examType && !!template && selectedOptions.length > 0 && !generating;
+  }, [examType, template, selectedOptions.length, generating]);
+
+  const generateReport = useCallback(
+    async (useAI: boolean = true) => {
+      if (!examType || !template) return;
+
+      try {
+        setGenerating(true);
+
+        // Busca opções selecionadas (garante consistência com DB)
+        const selectedOptionObjects = await SupabaseService.getOptionsByIds(selectedOptions);
+
+        const generationData: ReportGenerationData = {
+          patientData,
+          selectedOptions: selectedOptionObjects,
+          categories,
+          template,
+          additionalNotes,
+        };
+
+        if (useAI && aiAvailable) {
+          const result = await AIService.generateReport(generationData);
+          if (!mountedRef.current) return;
+          setReportData(result);
+        } else {
+          const simpleReport = AIService.generateSimpleReport(generationData);
+          if (!mountedRef.current) return;
+          setReportData({
+            rawText: simpleReport,
+            aiProcessedText: simpleReport,
+            finalReport: simpleReport,
+          });
+        }
+      } catch (err) {
+        console.error("Erro ao gerar laudo:", err);
+        if (mountedRef.current) alert("Erro ao gerar laudo. Tente novamente.");
+      } finally {
+        if (mountedRef.current) setGenerating(false);
       }
-    })
+    },
+    [examType, template, aiAvailable, selectedOptions, patientData, categories, additionalNotes]
+  );
+
+  const saveReport = useCallback(async () => {
+    if (!reportData || !examType) return;
+
+    try {
+      const reportToSave = {
+        exam_type_id: examType.id,
+        patient_name: patientData.name,
+        patient_age: patientData.age,
+        patient_gender: patientData.gender,
+        selected_options: selectedOptions,
+        raw_text: reportData.rawText,
+        ai_processed_text: reportData.aiProcessedText,
+        final_report: reportData.finalReport,
+        additional_notes: additionalNotes,
+      };
+
+      await SupabaseService.saveReport(reportToSave);
+      if (mountedRef.current) alert("Laudo salvo com sucesso!");
+    } catch (err) {
+      console.error("Erro ao salvar laudo:", err);
+      if (mountedRef.current) alert("Erro ao salvar laudo. Tente novamente.");
+    }
+  }, [reportData, examType, patientData, selectedOptions, additionalNotes]);
+
+  const copyReport = useCallback(() => {
+    if (reportData?.finalReport && navigator.clipboard) {
+      navigator.clipboard.writeText(reportData.finalReport);
+      alert("Laudo copiado para a área de transferência!");
+    }
+  }, [reportData?.finalReport]);
+
+  const clearForm = useCallback(() => {
+    setPatientData({ name: "", age: "", gender: "" });
+    setSelectedOptions([]);
+    setAdditionalNotes("");
+    setReportData(null);
+  }, []);
+
+  // ---------- UI ----------
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando dados do exame...</p>
+        </div>
+      </div>
+    );
   }
 
-  const gerarLaudo = () => {
-    let laudo = ''
-    
-    // Cabeçalho
-    laudo += 'RADIOGRAFIA DE TÓRAX\n\n'
-    
-    if (laudoData.paciente) {
-      laudo += `Paciente: ${laudoData.paciente}\n`
-    }
-    if (laudoData.idade) {
-      laudo += `Idade: ${laudoData.idade}\n`
-    }
-    if (laudoData.sexo) {
-      laudo += `Sexo: ${laudoData.sexo}\n`
-    }
-    
-    laudo += '\n'
-    
-    // Técnica
-    if (laudoData.tecnica.length > 0) {
-      laudo += 'TÉCNICA:\n'
-      laudoData.tecnica.forEach(item => {
-        laudo += `${item}.\n`
-      })
-      laudo += '\n'
-    }
-    
-    // Achados
-    if (laudoData.achados.length > 0) {
-      laudo += 'ACHADOS:\n'
-      laudoData.achados.forEach(item => {
-        laudo += `${item}.\n`
-      })
-      laudo += '\n'
-    }
-    
-    // Conclusão
-    if (laudoData.conclusao.length > 0) {
-      laudo += 'CONCLUSÃO:\n'
-      laudoData.conclusao.forEach(item => {
-        laudo += `- ${item}.\n`
-      })
-      laudo += '\n'
-    }
-    
-    // Observações
-    if (laudoData.observacoes) {
-      laudo += 'OBSERVAÇÕES:\n'
-      laudo += `${laudoData.observacoes}\n`
-    }
-    
-    setLaudoFinal(laudo)
-  }
-
-  const copiarLaudo = () => {
-    if (navigator.clipboard && laudoFinal) {
-      navigator.clipboard.writeText(laudoFinal)
-      alert('Laudo copiado para a área de transferência!')
-    }
-  }
-
-  const limparFormulario = () => {
-    setLaudoData({
-      paciente: '',
-      idade: '',
-      sexo: '',
-      tecnica: [],
-      achados: [],
-      conclusao: [],
-      observacoes: ''
-    })
-    setLaudoFinal('')
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={loadExamData}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          
+        <div className="mx-auto max-w-6xl">
           {/* Header */}
           <div className="mb-8">
-            <Link 
-              href="/laudos" 
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
-            >
+            <Link href="/laudos" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Voltar aos Laudos
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Laudo de Radiografia de Tórax</h1>
-            <p className="text-gray-600 mt-2">Preencha os dados e selecione as opções para gerar o laudo</p>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">{examType?.title}</h1>
+                <p className="text-gray-600 mt-2">{examType?.description}</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                {aiAvailable ? (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    IA Ativa
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    IA Indisponível
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8">
-            
+          <div className="grid gap-8 lg:grid-cols-2">
             {/* Formulário */}
             <div className="space-y-6">
-              
               {/* Dados do Paciente */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Dados do Paciente</h2>
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">Dados do Paciente</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Paciente</label>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">Nome do Paciente</label>
                     <input
                       type="text"
-                      value={laudoData.paciente}
-                      onChange={(e) => setLaudoData(prev => ({...prev, paciente: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={patientData.name || ""}
+                      onChange={(e) => setPatientData((prev) => ({ ...prev, name: e.target.value }))}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Digite o nome do paciente"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Idade</label>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">Idade</label>
                       <input
                         type="text"
-                        value={laudoData.idade}
-                        onChange={(e) => setLaudoData(prev => ({...prev, idade: e.target.value}))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={patientData.age || ""}
+                        onChange={(e) => setPatientData((prev) => ({ ...prev, age: e.target.value }))}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Ex: 45 anos"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
+                      <label className="mb-1 block text-sm font-medium text-gray-700">Sexo</label>
                       <select
-                        value={laudoData.sexo}
-                        onChange={(e) => setLaudoData(prev => ({...prev, sexo: e.target.value}))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={patientData.gender || ""}
+                        onChange={(e) => setPatientData((prev) => ({ ...prev, gender: e.target.value }))}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Selecione</option>
                         <option value="Masculino">Masculino</option>
                         <option value="Feminino">Feminino</option>
+                        <option value="Outro">Outro</option>
                       </select>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Técnica */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Técnica</h2>
-                <div className="space-y-2">
-                  {opcoesTecnica.map((opcao, index) => (
-                    <button
-                      key={index}
-                      onClick={() => toggleOption('tecnica', opcao)}
-                      className={`w-full text-left p-3 rounded-md border transition-colors ${
-                        laudoData.tecnica.includes(opcao)
-                          ? 'bg-blue-50 border-blue-200 text-blue-800'
-                          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      {opcao}
-                    </button>
-                  ))}
+              {/* Categorias Dinâmicas */}
+              {categories.map((category) => (
+                <div key={category.id} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900">{category.name}</h2>
+                  <div className="space-y-2">
+                    {category.options.map((option) => {
+                      const active = selectedOptions.includes(option.id);
+                      return (
+                        <button
+                          type="button"
+                          key={option.id}
+                          onClick={() => toggleOption(option.id)}
+                          className={`w-full rounded-md border p-3 text-left transition-colors ${
+                            active
+                              ? "border-blue-200 bg-blue-50 text-blue-800"
+                              : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-
-              {/* Achados */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Achados</h2>
-                <div className="space-y-2">
-                  {opcoesAchados.map((opcao, index) => (
-                    <button
-                      key={index}
-                      onClick={() => toggleOption('achados', opcao)}
-                      className={`w-full text-left p-3 rounded-md border transition-colors ${
-                        laudoData.achados.includes(opcao)
-                          ? 'bg-blue-50 border-blue-200 text-blue-800'
-                          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      {opcao}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Conclusão */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Conclusão</h2>
-                <div className="space-y-2">
-                  {opcoesConclusao.map((opcao, index) => (
-                    <button
-                      key={index}
-                      onClick={() => toggleOption('conclusao', opcao)}
-                      className={`w-full text-left p-3 rounded-md border transition-colors ${
-                        laudoData.conclusao.includes(opcao)
-                          ? 'bg-blue-50 border-blue-200 text-blue-800'
-                          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      {opcao}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              ))}
 
               {/* Observações */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Observações Adicionais</h2>
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">Observações Adicionais</h2>
                 <textarea
-                  value={laudoData.observacoes}
-                  onChange={(e) => setLaudoData(prev => ({...prev, observacoes: e.target.value}))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={additionalNotes}
+                  onChange={(e) => setAdditionalNotes(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={4}
                   placeholder="Digite observações adicionais..."
                 />
               </div>
-
             </div>
 
             {/* Preview do Laudo */}
             <div className="space-y-6">
-              
               {/* Botões de Ação */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex flex-wrap gap-3">
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={gerarLaudo}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                    onClick={() => generateReport(true)}
+                    disabled={!canGenerate}
+                    className="flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
-                    Gerar Laudo
+                    {generating ? (
+                      <>
+                        <svg className="mr-2 h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Gerando...
+                      </>
+                    ) : <>{aiAvailable ? "🤖 Gerar com IA" : "📝 Gerar Laudo"}</>}
                   </button>
+
                   <button
-                    onClick={copiarLaudo}
-                    disabled={!laudoFinal}
-                    className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    onClick={() => generateReport(false)}
+                    disabled={generating || selectedOptions.length === 0}
+                    className="rounded-md bg-slate-700 px-4 py-2 text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
-                    Copiar Laudo
+                    🧱 Fallback (sem IA)
                   </button>
+
                   <button
-                    onClick={limparFormulario}
-                    className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors"
+                    onClick={copyReport}
+                    disabled={!reportData}
+                    className="rounded-md bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
-                    Limpar
+                    📋 Copiar
+                  </button>
+
+                  <button
+                    onClick={saveReport}
+                    disabled={!reportData}
+                    className="rounded-md bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                  >
+                    💾 Salvar
+                  </button>
+
+                  <button
+                    onClick={clearForm}
+                    className="col-span-2 rounded-md bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
+                  >
+                    🗑️ Limpar
                   </button>
                 </div>
               </div>
 
               {/* Laudo Gerado */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Preview do Laudo</h2>
-                <div className="bg-gray-50 rounded-md p-4 min-h-96">
-                  {laudoFinal ? (
-                    <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono">
-                      {laudoFinal}
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">Preview do Laudo</h2>
+                <div className="min-h-96 rounded-md bg-gray-50 p-4">
+                  {reportData ? (
+                    <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800">
+                      {reportData.finalReport}
                     </pre>
                   ) : (
-                    <p className="text-gray-500 italic">
-                      Clique em "Gerar Laudo" para visualizar o resultado
+                    <p className="italic text-gray-500">
+                      Selecione as opções e clique em &quot;Gerar&quot; para visualizar o laudo
                     </p>
                   )}
                 </div>
               </div>
 
               {/* Estatísticas */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Estatísticas</h3>
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="mb-4 text-lg font-semibold text-gray-900">Estatísticas</h3>
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-blue-600">
-                      {laudoData.tecnica.length + laudoData.achados.length + laudoData.conclusao.length}
-                    </div>
+                    <div className="text-2xl font-bold text-blue-600">{selectedOptions.length}</div>
                     <div className="text-sm text-gray-600">Opções Selecionadas</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-green-600">
-                      {laudoFinal ? laudoFinal.length : 0}
+                      {reportData ? reportData.finalReport.length : 0}
                     </div>
                     <div className="text-sm text-gray-600">Caracteres no Laudo</div>
                   </div>
                 </div>
               </div>
-
             </div>
-
+            {/* /Preview */}
           </div>
-
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ToraxPage
-
+export default ToraxDinamicoPage;

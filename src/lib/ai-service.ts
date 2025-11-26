@@ -1,0 +1,295 @@
+import OpenAI from 'openai'
+
+// Tipos locais para evitar problemas de importação circular
+export interface Option {
+  id: string
+  category_id: string
+  label: string
+  value: string
+  keywords: string[]
+  order_index: number
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ReportTemplate {
+  id: string
+  exam_type_id: string
+  name: string
+  structure: any
+  ai_prompt?: string
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Category {
+  id: string
+  exam_type_id: string
+  name: string
+  slug: string
+  order_index: number
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_API_BASE
+})
+
+export interface PatientData {
+  name?: string
+  age?: string
+  gender?: string
+}
+
+export interface ReportGenerationData {
+  patientData: PatientData
+  selectedOptions: Option[]
+  categories: Category[]
+  template: ReportTemplate
+  additionalNotes?: string
+}
+
+export class AIService {
+  
+  // Gerar laudo com IA
+  static async generateReport(data: ReportGenerationData): Promise<{
+    rawText: string
+    aiProcessedText: string
+    finalReport: string
+  }> {
+    try {
+      // 1. Gerar texto bruto baseado nas opções selecionadas
+      const rawText = this.generateRawText(data)
+      
+      // 2. Processar com IA
+      const aiProcessedText = await this.processWithAI(rawText, data)
+      
+      // 3. Formatar laudo final
+      const finalReport = this.formatFinalReport(aiProcessedText, data.patientData)
+      
+      return {
+        rawText,
+        aiProcessedText,
+        finalReport
+      }
+    } catch (error) {
+      console.error('Erro ao gerar laudo:', error)
+      throw new Error('Erro ao processar laudo com IA')
+    }
+  }
+
+  // Gerar texto bruto das opções selecionadas
+  private static generateRawText(data: ReportGenerationData): string {
+    const { selectedOptions, categories } = data
+    
+    // Criar mapa de categorias por ID
+    const categoryMap: { [key: string]: Category } = {}
+    categories.forEach(cat => {
+      categoryMap[cat.id] = cat
+    })
+    
+    // Agrupar opções por categoria
+    const groupedOptions: { [key: string]: Option[] } = {}
+    
+    selectedOptions.forEach(option => {
+      const category = categoryMap[option.category_id]
+      if (category) {
+        const categorySlug = category.slug
+        
+        if (!groupedOptions[categorySlug]) {
+          groupedOptions[categorySlug] = []
+        }
+        groupedOptions[categorySlug].push(option)
+      }
+    })
+    
+    // Montar texto por seções na ordem correta
+    let rawText = ''
+    
+    // Ordenar categorias por order_index
+    const orderedCategories = categories
+      .sort((a, b) => a.order_index - b.order_index)
+    
+    orderedCategories.forEach(category => {
+      const categoryOptions = groupedOptions[category.slug]
+      
+      if (categoryOptions && categoryOptions.length > 0) {
+        rawText += `${category.name.toUpperCase()}:\n`
+        
+        categoryOptions.forEach(option => {
+          // Adicionar hífen para conclusões, ponto para outros
+          const prefix = category.slug === 'conclusao' ? '- ' : ''
+          rawText += `${prefix}${option.value}.\n`
+        })
+        
+        rawText += '\n'
+      }
+    })
+    
+    return rawText
+  }
+
+  // Processar texto com IA
+  private static async processWithAI(rawText: string, data: ReportGenerationData): Promise<string> {
+    const { template, patientData, additionalNotes } = data
+    
+    const systemPrompt = template.ai_prompt || `
+      Você é um radiologista experiente. Sua tarefa é revisar e melhorar o laudo médico fornecido, 
+      mantendo a precisão médica e melhorando a clareza e coerência do texto.
+      
+      Diretrizes:
+      - Mantenha toda a informação médica original
+      - Melhore a fluidez e coerência do texto
+      - Use terminologia médica adequada
+      - Certifique-se de que as conclusões sejam consistentes com os achados
+      - Mantenha o formato profissional de laudo médico
+      - NÃO adicione informações que não estavam no texto original
+      - NÃO remova informações médicas importantes
+    `
+    
+    const patientInfo = []
+    if (patientData.name) patientInfo.push(`Nome: ${patientData.name}`)
+    if (patientData.age) patientInfo.push(`Idade: ${patientData.age}`)
+    if (patientData.gender) patientInfo.push(`Sexo: ${patientData.gender}`)
+    
+    const userPrompt = `
+      ${patientInfo.length > 0 ? `Dados do paciente:\n${patientInfo.join('\n')}\n\n` : ''}
+      
+      Laudo para revisar e melhorar:
+      ${rawText}
+      
+      ${additionalNotes ? `\nObservações adicionais: ${additionalNotes}\n` : ''}
+      
+      Por favor, revise e melhore este laudo mantendo todas as informações médicas, 
+      mas tornando o texto mais fluido, coerente e profissional. Mantenha a estrutura 
+      de seções (TÉCNICA, ACHADOS, CONCLUSÃO) e não adicione informações que não 
+      estavam no texto original.
+    `
+    
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.3, // Baixa criatividade para manter precisão médica
+      max_tokens: 1500
+    })
+    
+    return completion.choices[0]?.message?.content || rawText
+  }
+
+  // Formatar laudo final
+  private static formatFinalReport(aiText: string, patientData: PatientData): string {
+    let finalReport = 'RADIOGRAFIA DE TÓRAX\n\n'
+    
+    // Adicionar dados do paciente se fornecidos
+    if (patientData.name) finalReport += `Paciente: ${patientData.name}\n`
+    if (patientData.age) finalReport += `Idade: ${patientData.age}\n`
+    if (patientData.gender) finalReport += `Sexo: ${patientData.gender}\n`
+    
+    if (patientData.name || patientData.age || patientData.gender) {
+      finalReport += '\n'
+    }
+    
+    // Adicionar texto processado pela IA
+    finalReport += aiText
+    
+    // Adicionar data e hora
+    finalReport += '\n\n'
+    finalReport += `Data do laudo: ${new Date().toLocaleDateString('pt-BR')}\n`
+    finalReport += `Hora: ${new Date().toLocaleTimeString('pt-BR')}`
+    
+    return finalReport
+  }
+
+  // Sugerir melhorias para o laudo
+  static async suggestImprovements(reportText: string): Promise<string[]> {
+    try {
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: `Você é um radiologista sênior revisando laudos de colegas. 
+                     Analise o laudo fornecido e sugira melhorias específicas e construtivas.
+                     Forneça sugestões em formato de lista, uma por linha.`
+          },
+          {
+            role: 'user',
+            content: `Analise este laudo e sugira melhorias específicas:\n\n${reportText}`
+          }
+        ],
+        temperature: 0.4,
+        max_tokens: 800
+      })
+      
+      const suggestions = completion.choices[0]?.message?.content || ''
+      return suggestions
+        .split('\n')
+        .filter((s: string) => s.trim().length > 0)
+        .map((s: string) => s.replace(/^[-*•]\s*/, '').trim())
+        .filter((s: string) => s.length > 0)
+    } catch (error) {
+      console.error('Erro ao gerar sugestões:', error)
+      return ['Não foi possível gerar sugestões no momento.']
+    }
+  }
+
+  // Explicar achados médicos em linguagem simples
+  static async explainFindings(findings: string[]): Promise<string> {
+    try {
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: `Você é um médico explicando achados radiológicos para um paciente 
+                     em linguagem simples e tranquilizadora. Seja claro, objetivo e 
+                     evite termos técnicos complexos.`
+          },
+          {
+            role: 'user',
+            content: `Explique estes achados radiológicos em linguagem simples para o paciente:\n\n${findings.join('\n')}`
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 600
+      })
+      
+      return completion.choices[0]?.message?.content || 'Não foi possível gerar explicação.'
+    } catch (error) {
+      console.error('Erro ao explicar achados:', error)
+      return 'Não foi possível gerar explicação no momento.'
+    }
+  }
+
+  // Gerar laudo simples sem IA (fallback)
+  static generateSimpleReport(data: ReportGenerationData): string {
+    const rawText = this.generateRawText(data)
+    return this.formatFinalReport(rawText, data.patientData)
+  }
+
+  // Validar se a IA está disponível
+  static async validateAI(): Promise<boolean> {
+    try {
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'user', content: 'Teste de conexão. Responda apenas "OK".' }
+        ],
+        max_tokens: 10
+      })
+      
+      return !!completion.choices[0]?.message?.content
+    } catch (error) {
+      console.error('IA não disponível:', error)
+      return false
+    }
+  }
+}
