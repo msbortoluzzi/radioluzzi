@@ -10,7 +10,7 @@ export interface ReportMaskSection {
 export interface ReportMask {
   id: string
   modality: string
-  exam_name: string
+  exam_type: string
   slug: string
   sections: {
     sections: ReportMaskSection[]
@@ -35,7 +35,7 @@ export class ReportMaskService {
       .select('*')
       .eq('active', true)
       .order('modality', { ascending: true })
-      .order('exam_name', { ascending: true })
+      .order('exam_type', { ascending: true })
     
     if (error) throw error
     return data || []
@@ -48,7 +48,7 @@ export class ReportMaskService {
       .select('*')
       .eq('modality', modality)
       .eq('active', true)
-      .order('exam_name', { ascending: true })
+      .order('exam_type', { ascending: true })
     
     if (error) throw error
     return data || []
@@ -107,7 +107,7 @@ export class ReportMaskService {
       .from('editor_reports')
       .select(`
         *,
-        report_masks (modality, exam_name)
+        report_masks (modality, exam_type)
       `)
       .order('created_at', { ascending: false })
       .limit(limit)
