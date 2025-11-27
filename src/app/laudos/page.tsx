@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { ReportMaskService, type ReportMask } from '@/lib/report-masks'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
@@ -35,6 +35,10 @@ const EditorLaudosPage: React.FC = () => {
   // Estados da IA
   const [isProcessingAI, setIsProcessingAI] = useState(false)
   const [aiEnabled, setAiEnabled] = useState(true)
+  
+  // Buffer de voz (acumula frases antes de processar)
+  const [voiceBuffer, setVoiceBuffer] = useState('')
+  const bufferTimerRef = useRef<NodeJS.Timeout | null>(null)
   
   // Processar texto com IA
   const processWithAI = useCallback(async (text: string) => {
@@ -85,8 +89,21 @@ const EditorLaudosPage: React.FC = () => {
     interimResults: true,
     onResult: async (text, isFinal) => {
       if (isFinal && text.trim()) {
-        // Processar com IA se habilitado
-        const processedText = await processWithAI(text)
+        // Adicionar ao buffer
+        setVoiceBuffer(prev => prev + ' ' + text)
+        
+        // Cancelar timer anterior
+        if (bufferTimerRef.current) {
+          clearTimeout(bufferTimerRef.current)
+        }
+        
+        // Aguardar 3 segundos de pausa antes de processar
+        bufferTimerRef.current = setTimeout(async () => {
+          const fullText = voiceBuffer + ' ' + text
+          setVoiceBuffer('') // Limpar buffer
+          
+          // Processar com IA
+          const processedText = await processWithAI(fullText.trim())
         
         // Adicionar ao editor com substituição inteligente de seções
         setEditorContent(prev => {
@@ -106,12 +123,13 @@ const EditorLaudosPage: React.FC = () => {
           // Processar com substituição inteligente
           return EditorSectionManager.processVoiceInput(
             prev,
-            text,
+            fullText,
             processedText,
             sectionIds,
             sectionTitles
           )
         })
+        }, 3000) // 3 segundos de pausa
       }
     },
     onError: (error) => {
