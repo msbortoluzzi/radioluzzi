@@ -38,10 +38,10 @@ const cards = [
 
 export default function CalculadorasPage() {
   return (
-    <div className="space-y-8 text-slate-900">
+    <div className="space-y-8 text-gray-100">
       <section className="text-center space-y-3">
-        <h1 className="text-3xl md:text-4xl font-semibold">🧮 Calculadoras Radiológicas</h1>
-        <p className="text-base md:text-lg text-slate-600 max-w-3xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-semibold text-gray-100">🧮 Calculadoras Radiológicas</h1>
+        <p className="text-base md:text-lg text-gray-400 max-w-3xl mx-auto">
           Atalhos para padronizar laudos e recomendações. Selecione uma calculadora.
         </p>
       </section>
@@ -49,23 +49,23 @@ export default function CalculadorasPage() {
       <section>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {cards.map((c) => (
-            <article key={c.slug} className="card p-6 flex flex-col gap-3">
+            <article key={c.slug} className="border border-[#222222] bg-[#111111] rounded-lg p-6 flex flex-col gap-3 hover:border-blue-500 transition-colors">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-2 text-slate-700">
+                <span className="inline-flex items-center gap-2 text-gray-100">
                   <Calculator className="w-5 h-5" />
                   <span className="text-xl font-semibold">{c.title}</span>
                 </span>
-                <span className="px-3 py-1 rounded-full text-xs bg-slate-100 text-slate-700">
+                <span className="px-3 py-1 rounded-full text-xs bg-blue-500/20 text-blue-400">
                   {c.badge}
                 </span>
               </div>
 
-              <p className="text-slate-600 text-sm leading-relaxed">{c.desc}</p>
+              <p className="text-gray-400 text-sm leading-relaxed">{c.desc}</p>
 
               <div className="mt-2 flex justify-end">
                 <Link
                   href={`/calculadoras/${c.slug}`}
-                  className="btn-secondary inline-flex items-center gap-1"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors inline-flex items-center gap-1"
                 >
                   Abrir <ChevronRight className="w-4 h-4" />
                 </Link>

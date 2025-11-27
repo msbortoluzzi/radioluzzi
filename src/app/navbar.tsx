@@ -11,6 +11,7 @@ export default function Navbar() {
     { href: '/', label: 'Artigos' },
     { href: '/laudos', label: 'Laudos' },
     { href: '/formulas', label: 'Fórmulas' },
+    { href: '/calculadoras', label: 'Calculadoras' },
     { href: '/protocolos', label: 'Protocolos' },
     { href: '/links', label: 'Links' },
   ]
