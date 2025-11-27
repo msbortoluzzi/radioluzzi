@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic'
 import { ReportMaskService, type ReportMask } from '@/lib/report-masks'
 import { QuickPhrasesService, type QuickPhrase } from '@/lib/quick-phrases'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
-import { RadiologyAIService } from '@/lib/radiology-ai'
 import { EditorSectionManager } from '@/lib/editor-section-manager'
 import DictationArea from '@/components/DictationArea'
 import QuickPhrasesPanel from '@/components/QuickPhrasesPanel'
@@ -134,10 +133,20 @@ const EditorLaudosPage: React.FC = () => {
     try {
       setIsProcessingAI(true)
       
-      const findings = await RadiologyAIService.interpretVoiceInput(
-        dictationText,
-        selectedMask.modality
-      )
+      const response = await fetch('/api/ai/interpret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: dictationText,
+          modality: selectedMask.modality
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Erro ao processar com IA')
+      }
+      
+      const { findings } = await response.json()
       
       if (findings.length === 0) {
         alert('IA não conseguiu interpretar os achados.')
