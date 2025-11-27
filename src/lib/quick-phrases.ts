@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-dynamic'
+import { supabase } from '@/lib/supabase-dynamic'
 
 export interface QuickPhrase {
   id: string
@@ -18,7 +18,7 @@ export class QuickPhrasesService {
    * Buscar todas as frases prontas
    */
   static async getAllPhrases(): Promise<QuickPhrase[]> {
-    const supabase = createClient()
+    // Cliente Supabase já importado
     
     const { data, error } = await supabase
       .from('quick_phrases')
@@ -41,7 +41,7 @@ export class QuickPhrasesService {
     modality?: string,
     examType?: string
   ): Promise<QuickPhrase[]> {
-    const supabase = createClient()
+    // Cliente Supabase já importado
     
     let query = supabase
       .from('quick_phrases')
@@ -73,7 +73,7 @@ export class QuickPhrasesService {
    * Incrementar contador de uso de uma frase
    */
   static async incrementUsage(phraseId: string): Promise<void> {
-    const supabase = createClient()
+    // Cliente Supabase já importado
     
     await supabase.rpc('increment_phrase_usage', { phrase_id: phraseId })
   }
@@ -82,7 +82,7 @@ export class QuickPhrasesService {
    * Adicionar nova frase pronta
    */
   static async addPhrase(phrase: Omit<QuickPhrase, 'id' | 'usage_count'>): Promise<QuickPhrase | null> {
-    const supabase = createClient()
+    // Cliente Supabase já importado
     
     const { data, error } = await supabase
       .from('quick_phrases')
@@ -105,7 +105,7 @@ export class QuickPhrasesService {
     phraseId: string,
     updates: Partial<QuickPhrase>
   ): Promise<QuickPhrase | null> {
-    const supabase = createClient()
+    // Cliente Supabase já importado
     
     const { data, error } = await supabase
       .from('quick_phrases')
@@ -126,7 +126,7 @@ export class QuickPhrasesService {
    * Deletar frase
    */
   static async deletePhrase(phraseId: string): Promise<boolean> {
-    const supabase = createClient()
+    // Cliente Supabase já importado
     
     const { error } = await supabase
       .from('quick_phrases')
