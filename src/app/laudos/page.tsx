@@ -16,7 +16,7 @@ const ReportEditor = dynamic(() => import('@/components/ReportEditor'), {
     <div className="border border-[#222222] rounded-lg bg-[#111111] p-6 min-h-[500px] flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-        <p className="text-gray-300 text-sm">Carregando editor...</p>
+        <p className="text-gray-100 text-sm">Carregando editor...</p>
       </div>
     </div>
   )
@@ -251,7 +251,7 @@ const EditorLaudosPage: React.FC = () => {
               <h2 className="text-lg font-semibold mb-4 text-gray-100">Máscaras</h2>
               
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-gray-300">Modalidade</label>
+                <label className="block text-sm font-medium mb-2 text-gray-100">Modalidade</label>
                 <div className="flex flex-col gap-2">
                   {modalities.map(modality => (
                     <button
@@ -260,7 +260,7 @@ const EditorLaudosPage: React.FC = () => {
                       className={`px-3 py-2 rounded-md text-sm ${
                         selectedModality === modality
                           ? 'bg-blue-600 text-white'
-                          : 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222222]'
+                          : 'bg-[#1a1a1a] text-gray-100 hover:bg-[#222222]'
                       }`}
                     >
                       {modality}
@@ -277,7 +277,7 @@ const EditorLaudosPage: React.FC = () => {
                     className={`w-full text-left px-3 py-2 rounded-md text-sm ${
                       selectedMask?.id === mask.id
                         ? 'bg-blue-600 text-white border-2 border-blue-500'
-                        : 'bg-[#0f0f0f] text-gray-300 border border-[#222222] hover:bg-[#1a1a1a]'
+                        : 'bg-[#0f0f0f] text-gray-100 border border-[#222222] hover:bg-[#1a1a1a]'
                     }`}
                   >
                     {mask.name}

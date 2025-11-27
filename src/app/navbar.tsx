@@ -10,7 +10,7 @@ export default function Navbar() {
   const navItems = [
     { href: '/', label: 'Artigos' },
     { href: '/laudos', label: 'Laudos' },
-    { href: '/calculadoras', label: 'Calculadoras' },
+    { href: '/formulas', label: 'Fórmulas' },
     { href: '/protocolos', label: 'Protocolos' },
     { href: '/links', label: 'Links' },
   ]

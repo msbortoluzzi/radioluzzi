@@ -390,19 +390,19 @@ export default function Page() {
             <h3 className="font-semibold mb-2 text-gray-100">Variação Percentual</h3>
             <div className="flex gap-2 mb-3">
               <button 
-                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 1 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-300'}`}
+                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 1 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-100'}`}
                 onClick={() => setPercNumMedidas(1)}
               >
                 1 medida
               </button>
               <button 
-                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 2 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-300'}`}
+                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 2 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-100'}`}
                 onClick={() => setPercNumMedidas(2)}
               >
                 2 medidas
               </button>
               <button 
-                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 3 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-300'}`}
+                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 3 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-100'}`}
                 onClick={() => setPercNumMedidas(3)}
               >
                 3 medidas
@@ -619,7 +619,7 @@ export default function Page() {
               <button 
                 key={btn} 
                 onClick={() => handleButton(btn)} 
-                className="bg-[#222222] text-gray-300 rounded py-2 text-sm font-bold hover:bg-gray-300"
+                className="bg-[#222222] text-gray-100 rounded py-2 text-sm font-bold hover:bg-gray-300"
               >
                 {btn === "*" ? "×" : btn === "/" ? "÷" : btn}
               </button>
