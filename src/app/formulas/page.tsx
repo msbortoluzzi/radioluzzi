@@ -366,7 +366,7 @@ export default function Page() {
       <div className="flex-1">
         <h1 className="text-2xl font-bold text-gray-100 mb-6">FÓRMULAS</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {/* 1. Volume elipsoide */}
           <div className="border border-[#222222] bg-[#111111] p-4 rounded">
             <h3 className="font-semibold mb-2 text-gray-100">Volume (0,52 × A × L × P)</h3>
