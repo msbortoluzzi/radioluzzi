@@ -98,25 +98,31 @@ const EditorLaudosPage: React.FC = () => {
     const sections = Array.isArray(mask.sections) ? mask.sections : (mask.sections?.sections || [])
     const defaultText = mask.default_texts || mask.default_text || {}
     
-    let initialContent = `<h1 style="text-align: center;"><strong>${mask.name.toUpperCase()}</strong></h1><br>`
+    // Gerar conteúdo com formatação Arial 11
+    let initialContent = `<div style="font-family: Arial, sans-serif; font-size: 11pt;">`
+    
+    // Título: Negrito, Caixa Alta, Centralizado, Arial 11
+    initialContent += `<p style="text-align: center; font-weight: bold; font-size: 11pt; margin-bottom: 12pt;">${mask.name.toUpperCase()}</p>`
     
     sections
       .sort((a, b) => a.order - b.order)
       .forEach(section => {
         if (section.type === 'title') return
         
-        initialContent += `<h2><strong>${section.title}</strong></h2>`
+        // Seção: Negrito, Caixa Alta, Arial 11
+        const isImpressao = section.title.toUpperCase().includes('IMPRESS')
+        initialContent += `<p style="font-weight: bold; font-size: 11pt; margin-top: 12pt; margin-bottom: 6pt;">${section.title.toUpperCase()}</p>`
         
         const sectionContent = defaultText[section.id] || ''
         if (sectionContent) {
           const formattedContent = sectionContent.replace(/\\n/g, '<br>').replace(/\n/g, '<br>')
-          initialContent += `<p>${formattedContent}</p>`
+          initialContent += `<p style="font-size: 11pt; margin-bottom: 6pt;">${formattedContent}</p>`
         } else {
-          initialContent += `<p><em>Clique aqui ou dite para preencher...</em></p>`
+          initialContent += `<p style="font-size: 11pt; margin-bottom: 6pt; color: #999;"><em>Clique aqui ou dite para preencher...</em></p>`
         }
-        
-        initialContent += '<br>'
       })
+    
+    initialContent += '</div>'
     
     setEditorContent(initialContent)
     loadQuickPhrasesForExam(mask.modality, mask.exam_type)
