@@ -2,17 +2,33 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 export default function Navbar() {
+  const pathname = usePathname()
+
+  const navItems = [
+    { href: '/', label: 'Artigos' },
+    { href: '/laudos', label: 'Laudos' },
+    { href: '/calculadoras', label: 'Calculadoras' },
+    { href: '/protocolos', label: 'Protocolos' },
+    { href: '/links', label: 'Links' },
+  ]
+
   return (
     <nav style={{
-      backgroundColor: '#2563eb',
-      padding: '16px 24px',
-      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+      backgroundColor: '#111111',
+      borderBottom: '1px solid #222222',
+      padding: '12px 0',
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000,
+      backdropFilter: 'blur(8px)'
     }}>
       <div style={{
-        maxWidth: '1200px',
+        maxWidth: '1400px',
         margin: '0 auto',
+        padding: '0 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -22,104 +38,81 @@ export default function Navbar() {
         <Link 
           href="/" 
           style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            textDecoration: 'none',
+            color: '#e5e5e5'
+          }}
+        >
+          {/* Logo R Azul */}
+          <div style={{
+            width: '40px',
+            height: '40px',
+            backgroundColor: '#3b82f6',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             fontSize: '24px',
             fontWeight: 700,
             color: '#ffffff',
-            textDecoration: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <span style={{
-            fontSize: '28px',
-            animation: 'pulse 2s ease-in-out infinite'
+            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
           }}>
-            ⚡
+            R
+          </div>
+          
+          <span style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: '#e5e5e5'
+          }}>
+            Radioluzzi
           </span>
-          Radioluzzi
         </Link>
 
         {/* Menu */}
         <div style={{
           display: 'flex',
-          gap: '24px',
-          alignItems: 'center'
+          gap: '8px',
+          alignItems: 'center',
+          flexWrap: 'wrap'
         }}>
-          <Link 
-            href="/" 
-            style={{
-              color: '#ffffff',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 500,
-              transition: 'opacity 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            Início
-          </Link>
-          
-          <Link 
-            href="/laudos" 
-            style={{
-              color: '#ffffff',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 500,
-              transition: 'opacity 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            Laudos
-          </Link>
-          
-          <Link 
-            href="/calculadoras" 
-            style={{
-              color: '#ffffff',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 500,
-              transition: 'opacity 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            Calculadoras
-          </Link>
-          
-          <Link 
-            href="/protocolos" 
-            style={{
-              color: '#ffffff',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 500,
-              transition: 'opacity 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            Protocolos
-          </Link>
-          
-          <Link 
-            href="/links" 
-            style={{
-              color: '#ffffff',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 500,
-              transition: 'opacity 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            Links
-          </Link>
+          {navItems.map((item) => {
+            const isActive = pathname === item.href
+            
+            return (
+              <Link 
+                key={item.href}
+                href={item.href} 
+                style={{
+                  color: isActive ? '#3b82f6' : '#a3a3a3',
+                  textDecoration: 'none',
+                  fontSize: '15px',
+                  fontWeight: isActive ? 600 : 500,
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  backgroundColor: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                  transition: 'all 0.2s',
+                  border: isActive ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'
+                    e.currentTarget.style.color = '#e5e5e5'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                    e.currentTarget.style.color = '#a3a3a3'
+                  }
+                }}
+              >
+                {item.label}
+              </Link>
+            )
+          })}
         </div>
       </div>
     </nav>

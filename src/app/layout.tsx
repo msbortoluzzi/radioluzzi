@@ -4,7 +4,7 @@ import Navbar from "./navbar";
 
 export const metadata: Metadata = {
   title: "Radioluzzi",
-  description: "Calculadoras Radiológicas",
+  description: "Ferramentas Inteligentes para Radiologistas",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-br">
+    <html lang="pt-br" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -26,41 +26,31 @@ export default function RootLayout({
         margin: 0,
         padding: 0,
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        backgroundColor: '#ffffff',
-        color: '#1e293b',
+        backgroundColor: '#0a0a0a',
+        color: '#e5e5e5',
         minHeight: '100vh',
         lineHeight: '1.6'
       }}>
         <Navbar />
 
         <main style={{
-          maxWidth: '1200px',
+          maxWidth: '1400px',
           margin: '0 auto',
-          padding: '32px 16px'
+          padding: '24px 16px'
         }}>
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e2e8f0',
-            overflow: 'hidden',
-            minHeight: 'calc(100vh - 200px)',
-            padding: '32px'
-          }}>
-            {children}
-          </div>
+          {children}
         </main>
 
         <footer style={{
-          backgroundColor: '#f8fafc',
-          color: '#64748b',
+          backgroundColor: '#111111',
+          color: '#888888',
           textAlign: 'center',
           padding: '32px 16px',
           marginTop: '48px',
-          borderTop: '1px solid #e2e8f0'
+          borderTop: '1px solid #222222'
         }}>
           <p style={{ margin: 0, fontSize: '14px' }}>
-            © {new Date().getFullYear()} Radioluzzi — Ferramentas para Radiologistas
+            © {new Date().getFullYear()} Radioluzzi — Ferramentas Inteligentes para Radiologistas
           </p>
         </footer>
       </body>
