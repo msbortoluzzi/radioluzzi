@@ -73,42 +73,63 @@ export class RadiologyAIService {
 Sua tarefa é extrair achados radiológicos de um texto ditado e estruturá-los em formato JSON.
 
 Para cada achado identificado, retorne:
-- organ: órgão ou estrutura anatômica
-- finding: achado principal (ex: "esteatose", "cálculo", "nódulo")
+- organ: órgão ou estrutura anatômica (padronizado: "tireoide", "fígado", "vesícula biliar", etc.)
+- finding: achado principal padronizado ("aumentada", "heterogênea", "nódulo", "cisto", "normal", etc.)
 - severity: grau ou classificação (se mencionado)
 - raw_description: descrição bruta do achado
+
+IMPORTANTE: Reconheça variações de linguagem natural:
+- "tireoide aumentada" = "tireoide de dimensões aumentadas" = "tireoide com aumento"
+- "ecotextura heterogênea" = "textura heterogênea" = "heterogênea"
+- "nódulo" = "formação nodular" = "lesão nodular"
 
 Modalidade atual: ${modality}
 ${currentSection ? `Seção atual: ${currentSection}` : ''}
 
 Exemplos:
+Input: "Tireoide de dimensões aumentadas"
+Output: {
+  "findings": [
+    {
+      "organ": "tireoide",
+      "finding": "aumentada",
+      "severity": null,
+      "raw_description": "tireoide de dimensões aumentadas"
+    }
+  ]
+}
+
 Input: "Fígado aumentado, esteatose grau 2"
-Output: [
-  {
-    "organ": "fígado",
-    "finding": "hepatomegalia",
-    "severity": null,
-    "raw_description": "fígado aumentado"
-  },
-  {
-    "organ": "fígado",
-    "finding": "esteatose",
-    "severity": "grau 2",
-    "raw_description": "esteatose grau 2"
-  }
-]
+Output: {
+  "findings": [
+    {
+      "organ": "fígado",
+      "finding": "aumentada",
+      "severity": null,
+      "raw_description": "fígado aumentado"
+    },
+    {
+      "organ": "fígado",
+      "finding": "esteatose",
+      "severity": "grau 2",
+      "raw_description": "esteatose grau 2"
+    }
+  ]
+}
 
-Input: "Vesícula com cálculo de 8mm"
-Output: [
-  {
-    "organ": "vesícula biliar",
-    "finding": "cálculo",
-    "severity": "8mm",
-    "raw_description": "cálculo de 8mm"
-  }
-]
+Input: "Nódulo sólido no lobo esquerdo medindo 1.2cm"
+Output: {
+  "findings": [
+    {
+      "organ": "tireoide",
+      "finding": "nódulo",
+      "severity": "1.2cm",
+      "raw_description": "nódulo sólido no lobo esquerdo medindo 1.2cm"
+    }
+  ]
+}
 
-Retorne APENAS o JSON, sem explicações adicionais.`
+Retorne SEMPRE no formato: {"findings": [...]}. Não retorne array direto.`
 
       const completion = await getOpenAI().chat.completions.create({
         model: 'gpt-4.1-mini',
