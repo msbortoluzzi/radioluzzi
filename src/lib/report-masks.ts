@@ -9,9 +9,9 @@ export interface ReportMaskSection {
 
 export interface ReportMask {
   id: string
+  name: string
   modality: string
   exam_type: string
-  slug: string
   sections: {
     sections: ReportMaskSection[]
   }

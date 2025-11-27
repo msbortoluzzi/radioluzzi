@@ -111,7 +111,7 @@ Output: [
 Retorne APENAS o JSON, sem explicações adicionais.`
 
       const completion = await getOpenAI().chat.completions.create({
-        model: 'gpt-4-mini',
+        model: 'gpt-4.1-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: voiceText }
@@ -206,7 +206,7 @@ Use terminologia médica adequada e seja objetivo.`
 
     try {
       const completion = await getOpenAI().chat.completions.create({
-        model: 'gpt-4-mini',
+        model: 'gpt-4.1-mini',
         messages: [
           { 
             role: 'system', 
@@ -255,7 +255,7 @@ NÃO remova achados importantes.
 Retorne apenas o laudo melhorado, sem comentários adicionais.`
 
       const completion = await getOpenAI().chat.completions.create({
-        model: 'gpt-4-mini',
+        model: 'gpt-4.1-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: reportText }
@@ -292,7 +292,7 @@ Retorne um JSON com array de strings:
 }`
 
       const completion = await getOpenAI().chat.completions.create({
-        model: 'gpt-4-mini',
+        model: 'gpt-4.1-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: findingsText }

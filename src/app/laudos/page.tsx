@@ -148,7 +148,7 @@ const EditorLaudosPage: React.FC = () => {
     const sections = mask.sections.sections || []
     const defaultText = mask.default_text || {}
     
-    let initialContent = `<h1 style="text-align: center;"><strong>${mask.exam_type.toUpperCase()}</strong></h1><br>`
+    let initialContent = `<h1 style="text-align: center;"><strong>${mask.name.toUpperCase()}</strong></h1><br>`
     
     sections
       .sort((a, b) => a.order - b.order)
@@ -318,7 +318,7 @@ const EditorLaudosPage: React.FC = () => {
                           : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <div className="font-medium">{mask.exam_name}</div>
+                      <div className="font-medium">{mask.name}</div>
                       <div className="text-xs text-gray-500 mt-0.5">
                         {mask.modality}
                       </div>
