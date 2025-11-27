@@ -59,7 +59,7 @@ const Chip: React.FC<ChipProps> = ({ active, onClick, title, children }) => (
     onClick={onClick}
     title={title}
     className={`px-2 py-1 text-xs border rounded ${
-      active ? "bg-blue-600 text-white" : "bg-gray-100"
+      active ? "bg-blue-600 text-white border-blue-500" : "bg-[#222222] text-gray-100 border-[#333333]"
     }`}
   >
     {children}
@@ -331,10 +331,10 @@ export default function BiradsUsPage() {
               </Chip>
             ))}
 
-            <span className="ml-3 text-[11px] text-gray-400">Relógio:</span>
+            <span className="ml-3 text-[11px] text-gray-300">Relógio:</span>
             <input
-              className="border border-[#222222] p-1.5 rounded w-20 text-xs"
-              placeholder="ex.: 4" className="placeholder-gray-500" className="placeholder-gray-500"
+              className="border border-[#333333] bg-[#0a0a0a] text-gray-100 placeholder-gray-500 p-1.5 rounded w-20 text-xs"
+              placeholder="ex.: 4" 
               value={a.hora}
               onChange={(e) => upd(idx, { hora: e.target.value })}
             />
@@ -343,7 +343,7 @@ export default function BiradsUsPage() {
               {["1ª", "2ª", "3ª"].map((lab, iM) => (
                 <input
                   key={lab}
-                  className="border border-[#222222] p-1.5 rounded w-28 text-xs"
+                  className="border border-[#333333] bg-[#0a0a0a] text-gray-100 placeholder-gray-500 p-1.5 rounded w-28 text-xs"
                   placeholder={`${lab} medida (cm)`}
                   value={a.medidas[iM] || ""}
                   onChange={(e) => {
@@ -354,14 +354,14 @@ export default function BiradsUsPage() {
                 />
               ))}
               <input
-                className="border border-[#222222] p-1.5 rounded w-28 text-xs"
-                placeholder="Dist. pele (cm)" className="placeholder-gray-500" className="placeholder-gray-500"
+                className="border border-[#333333] bg-[#0a0a0a] text-gray-100 placeholder-gray-500 p-1.5 rounded w-28 text-xs"
+                placeholder="Dist. pele (cm)" 
                 value={a.distPele}
                 onChange={(e) => upd(idx, { distPele: e.target.value })}
               />
               <input
-                className="border border-[#222222] p-1.5 rounded w-28 text-xs"
-                placeholder="Dist. papila (cm)" className="placeholder-gray-500" className="placeholder-gray-500"
+                className="border border-[#333333] bg-[#0a0a0a] text-gray-100 placeholder-gray-500 p-1.5 rounded w-28 text-xs"
+                placeholder="Dist. papila (cm)" 
                 value={a.distPapila}
                 onChange={(e) => upd(idx, { distPapila: e.target.value })}
               />
@@ -540,8 +540,8 @@ export default function BiradsUsPage() {
             <div>
               <div className="text-xs font-semibold">Correlação mamográfica</div>
               <input
-                className="border border-[#222222] p-1.5 rounded w-full text-xs"
-                placeholder="ex.: sem correlação suspeita / calcificações suspeitas correlatas / padrão benigno" className="placeholder-gray-500" className="placeholder-gray-500"
+                className="border border-[#333333] bg-[#0a0a0a] text-gray-100 placeholder-gray-500 p-1.5 rounded w-full text-xs"
+                placeholder="ex.: sem correlação suspeita / calcificações suspeitas correlatas / padrão benigno" 
                 value={a.correlacaoMammo}
                 onChange={(e) => upd(idx, { correlacaoMammo: e.target.value })}
               />
@@ -574,7 +574,7 @@ export default function BiradsUsPage() {
                   Sugerir
                 </Chip>
               </div>
-              {a.birads && <p className="text-[11px] text-gray-400 mt-1">Conduta: {condutaPorBirads(a.birads)}</p>}
+              {a.birads && <p className="text-[11px] text-gray-300 mt-1">Conduta: {condutaPorBirads(a.birads)}</p>}
             </div>
           </div>
         </div>
@@ -624,7 +624,7 @@ export default function BiradsUsPage() {
         >
           Copiar condutas
         </button>
-        <p className="text-[11px] text-gray-400 mt-2">
+        <p className="text-[11px] text-gray-300 mt-2">
           * Ajuste ao contexto (idade, risco, correlação mamográfica, achados associados, etc.).
         </p>
       </div>
