@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { ReportMaskService, type ReportMask } from '@/lib/report-masks'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import { RadiologyAIService } from '@/lib/radiology-ai'
+import { EditorSectionManager } from '@/lib/editor-section-manager'
 
 // Importar editor dinamicamente para evitar problemas de SSR
 const ReportEditor = dynamic(() => import('@/components/ReportEditor'), {
@@ -87,16 +88,29 @@ const EditorLaudosPage: React.FC = () => {
         // Processar com IA se habilitado
         const processedText = await processWithAI(text)
         
-        // Adicionar ao editor
+        // Adicionar ao editor com substituição inteligente de seções
         setEditorContent(prev => {
-          // Se não processou com IA, apenas adiciona no final
-          if (processedText === `<p>${text}</p>`) {
-            return prev + processedText
-          }
+          if (!selectedMask) return prev + processedText
           
-          // Se processou com IA, adiciona no final (por enquanto)
-          // TODO: Implementar substituição inteligente de seções
-          return prev + '<br>' + processedText
+          // Extrair seções disponíveis
+          const sections = Array.isArray(selectedMask.sections) 
+            ? selectedMask.sections 
+            : (selectedMask.sections?.sections || [])
+          
+          const sectionIds = sections.map(s => s.id)
+          const sectionTitles: Record<string, string> = {}
+          sections.forEach(s => {
+            sectionTitles[s.id] = s.title
+          })
+          
+          // Processar com substituição inteligente
+          return EditorSectionManager.processVoiceInput(
+            prev,
+            text,
+            processedText,
+            sectionIds,
+            sectionTitles
+          )
         })
       }
     },
