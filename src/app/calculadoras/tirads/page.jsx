@@ -192,12 +192,12 @@ export default function Page() {
   }
 
   return (
-    <main className="p-6 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-blue-800 text-gray-100 text-gray-100">TI-RADS (ACR)</h1>
+    <main className="p-6 max-w-4xl mx-auto space-y-6 text-gray-100">
+      <h1 className="text-2xl font-bold text-gray-100">TI-RADS (ACR)</h1>
 
       <button
         onClick={adicionar}
-        className="bg-green-600 text-white px-3 py-1.5 rounded text-sm"
+        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm transition-colors"
       >
         Adicionar nódulo
       </button>
@@ -217,7 +217,7 @@ export default function Page() {
                     novas[i] = e.target.value;
                     atualizar(idx, "medidas", novas);
                   }}
-                  className="border border-[#222222] p-1.5 rounded w-20 text-sm"
+                  className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-1.5 rounded w-20 text-sm placeholder-gray-500"
                   placeholder={i === 0 ? "Maior" : i === 1 ? "2º" : "3º"}
                 />
               ))}
@@ -279,8 +279,8 @@ export default function Page() {
                     key={i}
                     className={`px-2 py-1 text-xs border rounded ${
                       n.frases[criterio] === opcao.texto
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100"
+                        ? "bg-blue-600 text-white border-blue-500"
+                        : "bg-[#222222] text-gray-100 border-[#333333]"
                     }`}
                     onClick={() => selecionar(idx, criterio, opcao.valor, opcao.texto)}
                     title={opcao.label}
@@ -301,7 +301,7 @@ export default function Page() {
                 return (
                   <button
                     key={f.key}
-                    className={`px-2 py-1 text-xs border rounded ${ativo ? "bg-blue-600 text-white" : "bg-gray-100"}`}
+                    className={`px-2 py-1 text-xs border rounded ${ativo ? "bg-blue-600 text-white border-blue-500" : "bg-[#222222] text-gray-100 border-[#333333]"}`}
                     onClick={() => toggleFoco(idx, f)}
                     title={f.label}
                   >
@@ -310,7 +310,7 @@ export default function Page() {
                 );
               })}
               <button
-                className="px-2 py-1 text-xs border border-[#222222] rounded bg-[#222222]"
+                className="px-2 py-1 text-xs border border-[#333333] rounded bg-[#222222] text-gray-100 hover:bg-[#333333] transition-colors"
                 onClick={() => semMicro(idx)}
                 title="Desmarcar microcalcificações"
               >

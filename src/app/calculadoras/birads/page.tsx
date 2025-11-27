@@ -310,7 +310,7 @@ export default function BiradsUsPage() {
 
   /* -------- Render -------- */
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto text-gray-100">
       <h1 className="text-2xl font-bold mb-4 text-gray-100 text-gray-100">BI-RADS (Ultrassom)</h1>
 
       {achados.map((a, idx) => (
@@ -324,7 +324,7 @@ export default function BiradsUsPage() {
 
           {/* Linha 2 — Mama / Relógio / Medidas em UMA linha + distâncias */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-gray-400">Mama:</span>
+            <span className="text-[11px] text-gray-300">Mama:</span>
             {["direita", "esquerda"].map((op) => (
               <Chip key={op} active={a.mama === op} onClick={() => upd(idx, { mama: a.mama === op ? "" : op })}>
                 {op}
@@ -334,7 +334,7 @@ export default function BiradsUsPage() {
             <span className="ml-3 text-[11px] text-gray-400">Relógio:</span>
             <input
               className="border border-[#222222] p-1.5 rounded w-20 text-xs"
-              placeholder="ex.: 4"
+              placeholder="ex.: 4" className="placeholder-gray-500" className="placeholder-gray-500"
               value={a.hora}
               onChange={(e) => upd(idx, { hora: e.target.value })}
             />
@@ -355,13 +355,13 @@ export default function BiradsUsPage() {
               ))}
               <input
                 className="border border-[#222222] p-1.5 rounded w-28 text-xs"
-                placeholder="Dist. pele (cm)"
+                placeholder="Dist. pele (cm)" className="placeholder-gray-500" className="placeholder-gray-500"
                 value={a.distPele}
                 onChange={(e) => upd(idx, { distPele: e.target.value })}
               />
               <input
                 className="border border-[#222222] p-1.5 rounded w-28 text-xs"
-                placeholder="Dist. papila (cm)"
+                placeholder="Dist. papila (cm)" className="placeholder-gray-500" className="placeholder-gray-500"
                 value={a.distPapila}
                 onChange={(e) => upd(idx, { distPapila: e.target.value })}
               />
@@ -370,7 +370,7 @@ export default function BiradsUsPage() {
 
           {/* Tipo do achado */}
           <div className="flex flex-wrap gap-1">
-            <span className="text-[11px] text-gray-400">Tipo:</span>
+            <span className="text-[11px] text-gray-300">Tipo:</span>
             {["nódulo", "cisto"].map((t) => (
               <Chip key={t} active={a.tipo === t} onClick={() => upd(idx, { tipo: t as Achado["tipo"] })}>
                 {t}
@@ -541,7 +541,7 @@ export default function BiradsUsPage() {
               <div className="text-xs font-semibold">Correlação mamográfica</div>
               <input
                 className="border border-[#222222] p-1.5 rounded w-full text-xs"
-                placeholder="ex.: sem correlação suspeita / calcificações suspeitas correlatas / padrão benigno"
+                placeholder="ex.: sem correlação suspeita / calcificações suspeitas correlatas / padrão benigno" className="placeholder-gray-500" className="placeholder-gray-500"
                 value={a.correlacaoMammo}
                 onChange={(e) => upd(idx, { correlacaoMammo: e.target.value })}
               />
@@ -551,7 +551,7 @@ export default function BiradsUsPage() {
           {/* Observação e Categoria */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <div className="text-xs font-semibold">Observação</div>
+              <div className="text-xs font-semibold text-gray-100">Observação</div>
               <div className="flex flex-wrap gap-1">
                 {["estável", "novo"].map((op) => (
                   <Chip key={op} active={a.observacao === op} onClick={() => upd(idx, { observacao: op })}>
@@ -563,7 +563,7 @@ export default function BiradsUsPage() {
             </div>
 
             <div className="md:col-span-2">
-              <div className="text-xs font-semibold">Categoria BI-RADS</div>
+              <div className="text-xs font-semibold text-gray-100">Categoria BI-RADS</div>
               <div className="flex flex-wrap gap-1">
                 {["0", "2", "3", "4A", "4B", "4C", "5"].map((cat) => (
                   <Chip key={cat} active={a.birads === cat} onClick={() => upd(idx, { birads: a.birads === cat ? "" : (cat as BiradsCat) })}>
@@ -574,14 +574,14 @@ export default function BiradsUsPage() {
                   Sugerir
                 </Chip>
               </div>
-              {a.birads && <p className="text-[11px] text-gray-300 mt-1">Conduta: {condutaPorBirads(a.birads)}</p>}
+              {a.birads && <p className="text-[11px] text-gray-400 mt-1">Conduta: {condutaPorBirads(a.birads)}</p>}
             </div>
           </div>
         </div>
       ))}
 
       <button
-        className="bg-blue-700 text-white px-3 py-1.5 rounded text-sm"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm transition-colors"
         type="button"
         onClick={() => setAchados((prev) => [...prev, defaultFibroadenoma()])}
       >
@@ -589,9 +589,9 @@ export default function BiradsUsPage() {
       </button>
 
       {/* Pré-visualização */}
-      <div className="mt-6">
+      <div className="mt-6 text-gray-100">
         <div className="text-sm font-semibold">Pré-visualização</div>
-        <textarea className="w-full border border-[#222222] p-3 rounded h-40 mt-2" value={textoPreview} readOnly />
+        <textarea className="w-full border border-[#333333] bg-[#0a0a0a] text-gray-100 p-3 rounded h-40 mt-2" value={textoPreview} readOnly />
       </div>
 
       <div className="flex gap-3 mt-3">
@@ -608,7 +608,7 @@ export default function BiradsUsPage() {
               textoPreview
             )
           }
-          className="bg-green-500 text-white px-3 py-1.5 rounded text-sm"
+          className="bg-green-600 hover:bg-green-700 transition-colors text-white px-3 py-1.5 rounded text-sm"
         >
           Copiar formatado (Arial 11)
         </button>
@@ -616,8 +616,8 @@ export default function BiradsUsPage() {
 
       {/* Condutas */}
       <div className="mt-6 border border-[#222222] rounded p-4 bg-[#111111]">
-        <h3 className="font-semibold mb-2 text-sm">Condutas (por categoria atribuída ou sugerida):</h3>
-        <pre className="whitespace-pre-wrap text-xs">{condutasTexto}</pre>
+        <h3 className="font-semibold mb-2 text-sm text-gray-100">Condutas (por categoria atribuída ou sugerida):</h3>
+        <pre className="whitespace-pre-wrap text-xs text-gray-300">{condutasTexto}</pre>
         <button
           onClick={() => navigator.clipboard.writeText(condutasTexto)}
           className="mt-2 bg-blue-600 text-white px-3 py-1.5 rounded text-sm"

@@ -332,19 +332,19 @@ export default function Page() {
                 </div>
                 <h3 className="font-semibold">Características</h3>
                 <input
-                  placeholder="Tipo (sólido/cístico)"
+                  placeholder="Tipo (sólido/cístico)" className="placeholder-gray-500" className="placeholder-gray-500"
                   className="border border-[#222222] p-2 rounded w-40"
                   value={a.criterios.tipo || ""}
                   onChange={(e) => atualizar(idx, "tipo", e.target.value)}
                 />
                 <input
-                  placeholder="Ecogenicidade"
+                  placeholder="Ecogenicidade" className="placeholder-gray-500" className="placeholder-gray-500"
                   className="border border-[#222222] p-2 rounded w-40"
                   value={a.criterios.eco || ""}
                   onChange={(e) => atualizar(idx, "eco", e.target.value)}
                 />
                 <input
-                  placeholder="Margens"
+                  placeholder="Margens" className="placeholder-gray-500" className="placeholder-gray-500"
                   className="border border-[#222222] p-2 rounded w-40"
                   value={a.criterios.margens || ""}
                   onChange={(e) =>

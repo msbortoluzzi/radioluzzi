@@ -139,7 +139,7 @@ export default function Page() {
           }`}
         >
           <div className="text-sm text-gray-500">Resultado inicial</div>
-          <div className="text-base font-medium">{inicial.texto}</div>
+          <div className="text-base font-medium text-gray-100 text-gray-100">{inicial.texto}</div>
           {inicial.avisoTamanho && (
             <div className="text-xs text-gray-400 mt-1">{inicial.avisoTamanho}</div>
           )}
@@ -192,7 +192,7 @@ export default function Page() {
             </div>
             <div className="p-4 border border-[#222222] rounded-2xl bg-blue-50 border-blue-200">
               <div className="text-sm text-gray-500">Interpretação</div>
-              <div className="text-base font-medium">{washout.interpretacao}</div>
+              <div className="text-base font-medium text-gray-100 text-gray-100">{washout.interpretacao}</div>
             </div>
           </div>
         </div>
@@ -201,7 +201,7 @@ export default function Page() {
       {washout.fraseFinal && (
         <div className="p-4 border border-[#222222] rounded-2xl bg-[#111111]">
           <div className="text-sm text-gray-500">Frase final sugerida para laudo</div>
-          <div className="text-base font-medium">{washout.fraseFinal}</div>
+          <div className="text-base font-medium text-gray-100 text-gray-100">{washout.fraseFinal}</div>
         </div>
       )}
 
