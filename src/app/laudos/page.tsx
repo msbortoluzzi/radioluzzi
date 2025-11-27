@@ -89,17 +89,14 @@ const EditorLaudosPage: React.FC = () => {
         
         // Adicionar ao editor
         setEditorContent(prev => {
-          const tempDiv = document.createElement('div')
-          tempDiv.innerHTML = prev
-          const lastP = tempDiv.querySelector('p:last-child')
-          
-          if (lastP && lastP.innerHTML.includes('Clique aqui ou dite')) {
-            lastP.innerHTML = processedText
-          } else {
-            tempDiv.innerHTML += processedText
+          // Se não processou com IA, apenas adiciona no final
+          if (processedText === `<p>${text}</p>`) {
+            return prev + processedText
           }
           
-          return tempDiv.innerHTML
+          // Se processou com IA, adiciona no final (por enquanto)
+          // TODO: Implementar substituição inteligente de seções
+          return prev + '<br>' + processedText
         })
       }
     },
@@ -153,11 +150,16 @@ const EditorLaudosPage: React.FC = () => {
     sections
       .sort((a, b) => a.order - b.order)
       .forEach(section => {
+        // Pular seção de título (já foi adicionada)
+        if (section.type === 'title') return
+        
         initialContent += `<h2><strong>${section.title}</strong></h2>`
         
         const sectionContent = defaultText[section.id] || ''
         if (sectionContent) {
-          initialContent += `<p>${sectionContent}</p>`
+          // Converter \n em <br>
+          const formattedContent = sectionContent.replace(/\\n/g, '<br>').replace(/\n/g, '<br>')
+          initialContent += `<p>${formattedContent}</p>`
         } else {
           initialContent += `<p><em>Clique aqui ou dite para preencher...</em></p>`
         }
