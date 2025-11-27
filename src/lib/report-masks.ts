@@ -12,10 +12,9 @@ export interface ReportMask {
   name: string
   modality: string
   exam_type: string
-  sections: {
-    sections: ReportMaskSection[]
-  }
-  default_text: Record<string, string>
+  sections: ReportMaskSection[] | { sections: ReportMaskSection[] }
+  default_texts?: Record<string, string>
+  default_text?: Record<string, string>
   formatting_rules: {
     title?: Record<string, any>
     section_title?: Record<string, any>

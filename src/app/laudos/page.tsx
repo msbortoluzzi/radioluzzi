@@ -145,8 +145,8 @@ const EditorLaudosPage: React.FC = () => {
     setSelectedMask(mask)
     
     // Montar conteúdo inicial do laudo
-    const sections = mask.sections.sections || []
-    const defaultText = mask.default_text || {}
+    const sections = Array.isArray(mask.sections) ? mask.sections : (mask.sections?.sections || [])
+    const defaultText = mask.default_texts || mask.default_text || {}
     
     let initialContent = `<h1 style="text-align: center;"><strong>${mask.name.toUpperCase()}</strong></h1><br>`
     
