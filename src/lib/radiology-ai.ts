@@ -1,10 +1,22 @@
 import OpenAI from 'openai'
 import { supabase } from './supabase-dynamic'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_API_BASE
-})
+// Lazy initialization para evitar erros em build time
+let openaiInstance: OpenAI | null = null
+
+function getOpenAI(): OpenAI {
+  if (!openaiInstance) {
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY não configurada')
+    }
+    openaiInstance = new OpenAI({
+      apiKey,
+      baseURL: process.env.OPENAI_API_BASE || 'https://api.openai.com/v1'
+    })
+  }
+  return openaiInstance
+}
 
 export interface RadiologyKnowledge {
   id: string
@@ -98,7 +110,7 @@ Output: [
 
 Retorne APENAS o JSON, sem explicações adicionais.`
 
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: 'gpt-4-mini',
         messages: [
           { role: 'system', content: systemPrompt },
@@ -193,7 +205,7 @@ Retorne um JSON com:
 Use terminologia médica adequada e seja objetivo.`
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: 'gpt-4-mini',
         messages: [
           { 
@@ -242,7 +254,7 @@ NÃO remova achados importantes.
 
 Retorne apenas o laudo melhorado, sem comentários adicionais.`
 
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: 'gpt-4-mini',
         messages: [
           { role: 'system', content: systemPrompt },
@@ -279,7 +291,7 @@ Retorne um JSON com array de strings:
   "impressions": ["- Impressão 1", "- Impressão 2"]
 }`
 
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: 'gpt-4-mini',
         messages: [
           { role: 'system', content: systemPrompt },
