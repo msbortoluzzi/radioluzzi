@@ -23,17 +23,17 @@ export default function Page() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Protocolos</h1>
+      <h1 className="text-2xl font-bold text-gray-100 mb-6">Protocolos</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {protocolos.map((item, index) => (
           <Link
             key={index}
             href={item.href}
-            className="border rounded-2xl shadow-md p-6 hover:shadow-lg transition bg-white"
+            className="border border-[#222222] rounded-2xl shadow-md p-6 hover:shadow-lg hover:border-blue-500 transition bg-[#111111]"
           >
-            <h2 className="text-xl font-semibold mb-2">{item.titulo}</h2>
-            <p className="text-base text-gray-600">{item.descricao}</p>
+            <h2 className="text-xl font-semibold text-gray-100 mb-2">{item.titulo}</h2>
+            <p className="text-base text-gray-400">{item.descricao}</p>
           </Link>
         ))}
       </div>

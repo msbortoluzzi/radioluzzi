@@ -13,10 +13,10 @@ import QuickPhrasesPanel from '@/components/QuickPhrasesPanel'
 const ReportEditor = dynamic(() => import('@/components/ReportEditor'), {
   ssr: false,
   loading: () => (
-    <div className="border border-gray-300 rounded-lg bg-white p-6 min-h-[500px] flex items-center justify-center">
+    <div className="border border-[#222222] rounded-lg bg-[#111111] p-6 min-h-[500px] flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-        <p className="text-gray-600 text-sm">Carregando editor...</p>
+        <p className="text-gray-300 text-sm">Carregando editor...</p>
       </div>
     </div>
   )
@@ -225,32 +225,33 @@ const EditorLaudosPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Carregando...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-100 mb-2">
             Editor Inteligente de Laudos
           </h1>
+          <p className="text-gray-400">Selecione uma máscara e comece a ditar ou digitar seu laudo</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Máscaras */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <h2 className="text-lg font-semibold mb-4">Máscaras</h2>
+            <div className="bg-[#111111] rounded-lg border border-[#222222] p-4">
+              <h2 className="text-lg font-semibold mb-4 text-gray-100">Máscaras</h2>
               
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Modalidade</label>
+                <label className="block text-sm font-medium mb-2 text-gray-300">Modalidade</label>
                 <div className="flex flex-col gap-2">
                   {modalities.map(modality => (
                     <button
@@ -259,7 +260,7 @@ const EditorLaudosPage: React.FC = () => {
                       className={`px-3 py-2 rounded-md text-sm ${
                         selectedModality === modality
                           ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 hover:bg-gray-200'
+                          : 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222222]'
                       }`}
                     >
                       {modality}
@@ -275,8 +276,8 @@ const EditorLaudosPage: React.FC = () => {
                     onClick={() => handleSelectMask(mask)}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm ${
                       selectedMask?.id === mask.id
-                        ? 'bg-blue-50 border-2 border-blue-600'
-                        : 'bg-gray-50 border hover:bg-gray-100'
+                        ? 'bg-blue-600 text-white border-2 border-blue-500'
+                        : 'bg-[#0f0f0f] text-gray-300 border border-[#222222] hover:bg-[#1a1a1a]'
                     }`}
                   >
                     {mask.name}
@@ -301,7 +302,7 @@ const EditorLaudosPage: React.FC = () => {
               disabled={!selectedMask}
             />
 
-            <div className="bg-white rounded-lg border p-4">
+            <div className="bg-[#111111] rounded-lg border border-[#222222] p-4">
               <div className="flex justify-between mb-3">
                 <h3 className="text-lg font-semibold">Laudo Final</h3>
                 <button
@@ -320,8 +321,8 @@ const EditorLaudosPage: React.FC = () => {
                   editable={true}
                 />
               ) : (
-                <div className="border rounded-lg bg-gray-50 p-12 text-center">
-                  <p className="text-gray-500">Selecione uma máscara</p>
+                <div className="border border-[#222222] rounded-lg bg-[#0f0f0f] p-12 text-center">
+                  <p className="text-gray-400">Selecione uma máscara</p>
                 </div>
               )}
             </div>

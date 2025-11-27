@@ -30,10 +30,10 @@ const DictationArea: React.FC<DictationAreaProps> = ({
   const hasText = text.trim().length > 0
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="bg-[#111111] rounded-lg border border-[#222222] p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold text-gray-100">
           📝 Área de Ditação
         </h3>
         
@@ -58,11 +58,11 @@ const DictationArea: React.FC<DictationAreaProps> = ({
           onChange={(e) => onTextChange(e.target.value)}
           placeholder="Clique no microfone e comece a ditar, ou digite aqui..."
           disabled={disabled || isListening}
-          className="w-full h-40 p-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+          className="w-full h-40 p-3 border border-[#333333] bg-[#0a0a0a] text-gray-100 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-[#0f0f0f] disabled:cursor-not-allowed placeholder-gray-500"
         />
         
         {/* Indicador de caracteres */}
-        <div className="text-xs text-gray-500 mt-1 text-right">
+        <div className="text-xs text-gray-400 mt-1 text-right">
           {text.length} caracteres
         </div>
       </div>
@@ -98,7 +98,7 @@ const DictationArea: React.FC<DictationAreaProps> = ({
         <button
           onClick={onClear}
           disabled={!hasText || isProcessing || disabled}
-          className="px-4 py-2 bg-gray-500 text-white rounded-md font-medium hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-[#333333] text-white rounded-md font-medium hover:bg-[#444444] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           🗑️ Limpar
         </button>

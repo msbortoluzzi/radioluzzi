@@ -364,21 +364,21 @@ export default function Page() {
     <div className="flex gap-6 p-6 max-w-7xl mx-auto">
       {/* Coluna principal com fórmulas */}
       <div className="flex-1">
-        <h1 className="text-2xl font-bold text-blue-900 mb-6">FÓRMULAS</h1>
+        <h1 className="text-2xl font-bold text-gray-100 mb-6">FÓRMULAS</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* 1. Volume elipsoide */}
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold mb-2">Volume (0,52 × A × L × P)</h3>
+          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
+            <h3 className="font-semibold mb-2 text-gray-100">Volume (0,52 × A × L × P)</h3>
             <div className="flex gap-2 mb-2">
-              <input className="border p-2 rounded w-24" placeholder="AP (cm)" value={volA} onChange={(e) => setVolA(e.target.value)} />
-              <input className="border p-2 rounded w-24" placeholder="LL (cm)" value={volB} onChange={(e) => setVolB(e.target.value)} />
-              <input className="border p-2 rounded w-24" placeholder="CC (cm)" value={volC} onChange={(e) => setVolC(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-24" placeholder="AP (cm)" value={volA} onChange={(e) => setVolA(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-24" placeholder="LL (cm)" value={volB} onChange={(e) => setVolB(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-24" placeholder="CC (cm)" value={volC} onChange={(e) => setVolC(e.target.value)} />
             </div>
             {fraseElipsoide(volA, volB, volC) && (
-              <div className="bg-gray-100 p-3 rounded">
-                <p className="text-sm">{fraseElipsoide(volA, volB, volC)}</p>
-                <button className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => copiar(fraseElipsoide(volA, volB, volC))}>
+              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
+                <p className="text-sm text-gray-100">{fraseElipsoide(volA, volB, volC)}</p>
+                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(fraseElipsoide(volA, volB, volC))}>
                   Copiar
                 </button>
               </div>
@@ -386,59 +386,59 @@ export default function Page() {
           </div>
 
           {/* 2. Porcentagem Flexível - ORDEM AJUSTADA */}
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold mb-2">Variação Percentual</h3>
+          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
+            <h3 className="font-semibold mb-2 text-gray-100">Variação Percentual</h3>
             <div className="flex gap-2 mb-3">
               <button 
-                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 1 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-300'}`}
                 onClick={() => setPercNumMedidas(1)}
               >
                 1 medida
               </button>
               <button 
-                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 2 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-300'}`}
                 onClick={() => setPercNumMedidas(2)}
               >
                 2 medidas
               </button>
               <button 
-                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 3 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 3 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-300'}`}
                 onClick={() => setPercNumMedidas(3)}
               >
                 3 medidas
               </button>
             </div>
             
-            <p className="text-xs text-gray-600 mb-2">Medidas iniciais:</p>
+            <p className="text-xs text-gray-400 mb-2">Medidas iniciais:</p>
             <div className="space-y-2 mb-3">
-              <input className="border p-2 rounded w-full" placeholder="Base 1" value={percBase1} onChange={(e) => setPercBase1(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Base 1" value={percBase1} onChange={(e) => setPercBase1(e.target.value)} />
               
               {percNumMedidas >= 2 && (
-                <input className="border p-2 rounded w-full" placeholder="Base 2" value={percBase2} onChange={(e) => setPercBase2(e.target.value)} />
+                <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Base 2" value={percBase2} onChange={(e) => setPercBase2(e.target.value)} />
               )}
               
               {percNumMedidas >= 3 && (
-                <input className="border p-2 rounded w-full" placeholder="Base 3" value={percBase3} onChange={(e) => setPercBase3(e.target.value)} />
+                <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Base 3" value={percBase3} onChange={(e) => setPercBase3(e.target.value)} />
               )}
             </div>
 
-            <p className="text-xs text-gray-600 mb-2">Medidas atuais:</p>
+            <p className="text-xs text-gray-400 mb-2">Medidas atuais:</p>
             <div className="space-y-2">
-              <input className="border p-2 rounded w-full" placeholder="Atual 1" value={percAtual1} onChange={(e) => setPercAtual1(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Atual 1" value={percAtual1} onChange={(e) => setPercAtual1(e.target.value)} />
               
               {percNumMedidas >= 2 && (
-                <input className="border p-2 rounded w-full" placeholder="Atual 2" value={percAtual2} onChange={(e) => setPercAtual2(e.target.value)} />
+                <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Atual 2" value={percAtual2} onChange={(e) => setPercAtual2(e.target.value)} />
               )}
               
               {percNumMedidas >= 3 && (
-                <input className="border p-2 rounded w-full" placeholder="Atual 3" value={percAtual3} onChange={(e) => setPercAtual3(e.target.value)} />
+                <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Atual 3" value={percAtual3} onChange={(e) => setPercAtual3(e.target.value)} />
               )}
             </div>
 
             {frasePorcentagem() && (
-              <div className="bg-gray-100 p-3 rounded mt-2">
-                <p className="text-sm font-semibold">{frasePorcentagem()}</p>
-                <button className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => copiar(frasePorcentagem())}>
+              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded mt-2">
+                <p className="text-sm font-semibold text-gray-100">{frasePorcentagem()}</p>
+                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(frasePorcentagem())}>
                   Copiar
                 </button>
               </div>
@@ -446,19 +446,19 @@ export default function Page() {
           </div>
 
           {/* 3. Regra de Três */}
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold mb-2">Regra de Três</h3>
-            <p className="text-xs text-gray-600 mb-2">A está para B, assim como C está para X</p>
+          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
+            <h3 className="font-semibold mb-2 text-gray-100">Regra de Três</h3>
+            <p className="text-xs text-gray-400 mb-2">A está para B, assim como C está para X</p>
             <div className="flex gap-2 mb-2">
-              <input className="border p-2 rounded w-20" placeholder="A" value={r3A} onChange={(e) => setR3A(e.target.value)} />
-              <input className="border p-2 rounded w-20" placeholder="B" value={r3B} onChange={(e) => setR3B(e.target.value)} />
-              <input className="border p-2 rounded w-20" placeholder="C" value={r3C} onChange={(e) => setR3C(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-20" placeholder="A" value={r3A} onChange={(e) => setR3A(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-20" placeholder="B" value={r3B} onChange={(e) => setR3B(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-20" placeholder="C" value={r3C} onChange={(e) => setR3C(e.target.value)} />
             </div>
             {calcRegraTres() && (
-              <div className="bg-gray-100 p-3 rounded">
-                <p className="text-sm">X = {calcRegraTres()}</p>
+              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
+                <p className="text-sm text-gray-100">X = {calcRegraTres()}</p>
                 <p className="text-xs mt-1">{fraseRegraTres()}</p>
-                <button className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => copiar(`Resultado: ${calcRegraTres()}`)}>
+                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(`Resultado: ${calcRegraTres()}`)}>
                   Copiar
                 </button>
               </div>
@@ -466,16 +466,16 @@ export default function Page() {
           </div>
 
           {/* 4. Razão C/L */}
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold mb-2">Razão C/L (Comprimento ÷ Largura)</h3>
+          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
+            <h3 className="font-semibold mb-2 text-gray-100">Razão C/L (Comprimento ÷ Largura)</h3>
             <div className="flex gap-2 mb-2">
-              <input className="border p-2 rounded flex-1" placeholder="Eixo longo (cm)" value={clLongo} onChange={(e) => setClLongo(e.target.value)} />
-              <input className="border p-2 rounded flex-1" placeholder="Eixo curto (cm)" value={clCurto} onChange={(e) => setClCurto(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Eixo longo (cm)" value={clLongo} onChange={(e) => setClLongo(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Eixo curto (cm)" value={clCurto} onChange={(e) => setClCurto(e.target.value)} />
             </div>
             {calcCL() && (
-              <div className="bg-gray-100 p-3 rounded">
-                <p className="text-sm">Razão C/L = {calcCL()}</p>
-                <p className="text-sm">
+              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
+                <p className="text-sm text-gray-100">Razão C/L = {calcCL()}</p>
+                <p className="text-sm text-gray-100">
                   {parseFloat(calcCL()) >= 2 ? "Alongado (≥2)" : "Oval (<2)"}
                 </p>
               </div>
@@ -483,21 +483,21 @@ export default function Page() {
           </div>
 
           {/* 5. TFG (CKD-EPI) */}
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold mb-2">TFG (CKD-EPI)</h3>
-            <p className="text-xs text-gray-600 mb-2">Taxa de Filtração Glomerular</p>
+          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
+            <h3 className="font-semibold mb-2 text-gray-100">TFG (CKD-EPI)</h3>
+            <p className="text-xs text-gray-400 mb-2">Taxa de Filtração Glomerular</p>
             <div className="flex gap-2 mb-2">
-              <input className="border p-2 rounded w-20" placeholder="Idade" value={tfgIdade} onChange={(e) => setTfgIdade(e.target.value)} />
-              <input className="border p-2 rounded flex-1" placeholder="Cr (mg/dL)" value={tfgCr} onChange={(e) => setTfgCr(e.target.value)} />
-              <select className="border p-2 rounded" value={tfgSexo} onChange={(e) => setTfgSexo(e.target.value as "M" | "F")}>
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-20" placeholder="Idade" value={tfgIdade} onChange={(e) => setTfgIdade(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Cr (mg/dL)" value={tfgCr} onChange={(e) => setTfgCr(e.target.value)} />
+              <select className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded" value={tfgSexo} onChange={(e) => setTfgSexo(e.target.value as "M" | "F")}>
                 <option value="M">M</option>
                 <option value="F">F</option>
               </select>
             </div>
             {fraseTFG() && (
-              <div className="bg-gray-100 p-3 rounded">
-                <p className="text-sm">{fraseTFG()}</p>
-                <button className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => copiar(fraseTFG())}>
+              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
+                <p className="text-sm text-gray-100">{fraseTFG()}</p>
+                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(fraseTFG())}>
                   Copiar
                 </button>
               </div>
@@ -505,27 +505,27 @@ export default function Page() {
           </div>
 
           {/* 6. RECIST 1.1 */}
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold mb-2">RECIST 1.1 - Variação Tumoral</h3>
-            <p className="text-xs text-gray-600 mb-2">Soma dos diâmetros das lesões-alvo</p>
+          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
+            <h3 className="font-semibold mb-2 text-gray-100">RECIST 1.1 - Variação Tumoral</h3>
+            <p className="text-xs text-gray-400 mb-2">Soma dos diâmetros das lesões-alvo</p>
             <div className="flex gap-2 mb-2">
               <input 
-                className="border p-2 rounded flex-1" 
+                className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" 
                 placeholder="Medida basal (cm)" 
                 value={recistBase} 
                 onChange={(e) => setRecistBase(e.target.value)} 
               />
               <input 
-                className="border p-2 rounded flex-1" 
+                className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" 
                 placeholder="Medida atual (cm)" 
                 value={recistAtual} 
                 onChange={(e) => setRecistAtual(e.target.value)} 
               />
             </div>
             {fraseRECIST() && (
-              <div className="bg-gray-100 p-3 rounded">
-                <p className="text-sm font-semibold">{fraseRECIST()}</p>
-                <button className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => copiar(fraseRECIST())}>
+              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
+                <p className="text-sm font-semibold text-gray-100">{fraseRECIST()}</p>
+                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(fraseRECIST())}>
                   Copiar
                 </button>
               </div>
@@ -533,16 +533,16 @@ export default function Page() {
           </div>
 
           {/* 7. ICT */}
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold mb-2">Índice Cardiotorácico (ICT)</h3>
+          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
+            <h3 className="font-semibold mb-2 text-gray-100">Índice Cardiotorácico (ICT)</h3>
             <div className="flex gap-2 mb-2">
-              <input className="border p-2 rounded flex-1" placeholder="Diâmetro cardíaco (cm)" value={ictCard} onChange={(e) => setIctCard(e.target.value)} />
-              <input className="border p-2 rounded flex-1" placeholder="Diâmetro torácico (cm)" value={ictTorax} onChange={(e) => setIctTorax(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Diâmetro cardíaco (cm)" value={ictCard} onChange={(e) => setIctCard(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Diâmetro torácico (cm)" value={ictTorax} onChange={(e) => setIctTorax(e.target.value)} />
             </div>
             {calcICT() && (
-              <div className="bg-gray-100 p-3 rounded">
-                <p className="text-sm">ICT = {calcICT()}%</p>
-                <button className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => copiar(`ICT = ${calcICT()}%`)}>
+              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
+                <p className="text-sm text-gray-100">ICT = {calcICT()}%</p>
+                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(`ICT = ${calcICT()}%`)}>
                   Copiar
                 </button>
               </div>
@@ -550,16 +550,16 @@ export default function Page() {
           </div>
 
           {/* 8. Dose de Contraste */}
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold mb-2">Dose de Contraste</h3>
+          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
+            <h3 className="font-semibold mb-2 text-gray-100">Dose de Contraste</h3>
             <div className="flex gap-2 mb-2">
-              <input className="border p-2 rounded flex-1" placeholder="Peso (kg)" value={contrastePeso} onChange={(e) => setContrastePeso(e.target.value)} />
-              <input className="border p-2 rounded w-24" placeholder="mL/kg" value={contrasteDose} onChange={(e) => setContrasteDose(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Peso (kg)" value={contrastePeso} onChange={(e) => setContrastePeso(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-24" placeholder="mL/kg" value={contrasteDose} onChange={(e) => setContrasteDose(e.target.value)} />
             </div>
             {fraseContraste() && (
-              <div className="bg-gray-100 p-3 rounded">
-                <p className="text-sm">{fraseContraste()}</p>
-                <button className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => copiar(fraseContraste())}>
+              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
+                <p className="text-sm text-gray-100">{fraseContraste()}</p>
+                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(fraseContraste())}>
                   Copiar
                 </button>
               </div>
@@ -567,17 +567,17 @@ export default function Page() {
           </div>
 
           {/* 9. Área de Superfície Corporal */}
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold mb-2">Área de Superfície Corporal (ASC)</h3>
-            <p className="text-xs text-gray-600 mb-2">Fórmula de Mosteller</p>
+          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
+            <h3 className="font-semibold mb-2 text-gray-100">Área de Superfície Corporal (ASC)</h3>
+            <p className="text-xs text-gray-400 mb-2">Fórmula de Mosteller</p>
             <div className="flex gap-2 mb-2">
-              <input className="border p-2 rounded flex-1" placeholder="Peso (kg)" value={bsaPeso} onChange={(e) => setBsaPeso(e.target.value)} />
-              <input className="border p-2 rounded flex-1" placeholder="Altura (cm)" value={bsaAltura} onChange={(e) => setBsaAltura(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Peso (kg)" value={bsaPeso} onChange={(e) => setBsaPeso(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Altura (cm)" value={bsaAltura} onChange={(e) => setBsaAltura(e.target.value)} />
             </div>
             {fraseBSA() && (
-              <div className="bg-gray-100 p-3 rounded">
-                <p className="text-sm">{fraseBSA()}</p>
-                <button className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => copiar(fraseBSA())}>
+              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
+                <p className="text-sm text-gray-100">{fraseBSA()}</p>
+                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(fraseBSA())}>
                   Copiar
                 </button>
               </div>
@@ -585,16 +585,16 @@ export default function Page() {
           </div>
 
           {/* 10. IMC - POR ÚLTIMO */}
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold mb-2">Índice de Massa Corporal (IMC)</h3>
+          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
+            <h3 className="font-semibold mb-2 text-gray-100">Índice de Massa Corporal (IMC)</h3>
             <div className="flex gap-2 mb-2">
-              <input className="border p-2 rounded flex-1" placeholder="Peso (kg)" value={imcPeso} onChange={(e) => setImcPeso(e.target.value)} />
-              <input className="border p-2 rounded flex-1" placeholder="Altura (m)" value={imcAltura} onChange={(e) => setImcAltura(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Peso (kg)" value={imcPeso} onChange={(e) => setImcPeso(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Altura (m)" value={imcAltura} onChange={(e) => setImcAltura(e.target.value)} />
             </div>
             {fraseIMC() && (
-              <div className="bg-gray-100 p-3 rounded">
-                <p className="text-sm">{fraseIMC()}</p>
-                <button className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm" onClick={() => copiar(fraseIMC())}>
+              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
+                <p className="text-sm text-gray-100">{fraseIMC()}</p>
+                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(fraseIMC())}>
                   Copiar
                 </button>
               </div>
@@ -605,9 +605,9 @@ export default function Page() {
 
       {/* Calculadora fixa (sticky) */}
       <div className="w-64 sticky top-6 self-start">
-        <div className="border p-3 rounded bg-white shadow-md">
-          <h3 className="font-semibold mb-2 text-sm">Calculadora</h3>
-          <div className="bg-gray-100 p-2 rounded mb-2 text-right text-lg font-mono">
+        <div className="border border-[#222222] p-3 rounded bg-[#111111] shadow-md">
+          <h3 className="font-semibold mb-2 text-sm text-gray-100">Calculadora</h3>
+          <div className="bg-[#0a0a0a] border border-[#333333] p-2 rounded mb-2 text-right text-lg font-mono text-gray-100">
             {stage === "resultado"
               ? resultado
               : stage === "n1"
@@ -619,14 +619,14 @@ export default function Page() {
               <button 
                 key={btn} 
                 onClick={() => handleButton(btn)} 
-                className="bg-gray-200 rounded py-2 text-sm font-bold hover:bg-gray-300"
+                className="bg-[#222222] text-gray-300 rounded py-2 text-sm font-bold hover:bg-gray-300"
               >
                 {btn === "*" ? "×" : btn === "/" ? "÷" : btn}
               </button>
             ))}
             <button 
               onClick={() => handleButton("=")} 
-              className="col-span-4 bg-blue-600 text-white rounded py-2 text-sm font-bold hover:bg-blue-700 mt-1"
+              className="col-span-4 bg-blue-600 text-white rounded py-2 text-sm font-bold hover:bg-blue-700 transition-colors mt-1"
             >
               =
             </button>

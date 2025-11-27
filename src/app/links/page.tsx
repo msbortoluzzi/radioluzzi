@@ -13,10 +13,10 @@ type LinkRow = {
 };
 
 function resolveIcon(name?: string | null) {
-  if (!name) return <Link2 className="h-6 w-6 text-blue-700" />;
+  if (!name) return <Link2 className="h-6 w-6 text-blue-400" />;
   const n = name.toLowerCase();
-  if (n.includes("external")) return <ExternalLink className="h-6 w-6 text-blue-700" />;
-  return <Link2 className="h-6 w-6 text-blue-700" />;
+  if (n.includes("external")) return <ExternalLink className="h-6 w-6 text-blue-400" />;
+  return <Link2 className="h-6 w-6 text-blue-400" />;
 }
 
 export default async function Page() {
@@ -32,8 +32,8 @@ export default async function Page() {
   if (error) {
     return (
       <main className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold">Links Úteis</h1>
-        <p className="text-red-600">Erro ao carregar links: {error.message}</p>
+        <h1 className="text-3xl font-bold text-gray-100">Links Úteis</h1>
+        <p className="text-red-400">Erro ao carregar links: {error.message}</p>
       </main>
     );
   }
@@ -43,30 +43,30 @@ export default async function Page() {
   return (
     <main className="p-6 space-y-6">
       <section className="space-y-4 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-blue-900 drop-shadow-sm">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-100 drop-shadow-sm">
           Links Úteis
         </h1>
-        <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto">
         </p>
       </section>
 
       <section className="space-y-4">
         {items.length === 0 ? (
-          <p className="text-center text-gray-600">Nenhum link cadastrado.</p>
+          <p className="text-center text-gray-400">Nenhum link cadastrado.</p>
         ) : (
           items.map((item) => {
             const IconEl = resolveIcon(item.icon);
             const isExternal = item.href.startsWith("http");
 
             const Card = (
-              <div className="flex items-center gap-4 rounded-xl border border-blue-200 bg-white/70 backdrop-blur p-4 shadow-sm hover:shadow-md hover:bg-blue-50 transition-all duration-200">
+              <div className="flex items-center gap-4 rounded-xl border border-[#222222] bg-[#111111] backdrop-blur p-4 shadow-sm hover:shadow-md hover:border-blue-500 transition-all duration-200">
                 {IconEl}
                 <div className="flex flex-col text-left">
-                  <h2 className="text-base font-semibold text-blue-800">
+                  <h2 className="text-base font-semibold text-gray-100">
                     {item.titulo}
                   </h2>
                   {item.descricao ? (
-                    <p className="text-sm text-gray-700">{item.descricao}</p>
+                    <p className="text-sm text-gray-400">{item.descricao}</p>
                   ) : null}
                 </div>
               </div>

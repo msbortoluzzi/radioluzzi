@@ -68,51 +68,51 @@ export default function HomePage() {
   }, [artigos]);
 
   return (
-    <div className="space-y-8 text-slate-900">
+    <div className="space-y-8 text-gray-100">
       {/* Header */}
       <section className="text-center space-y-3">
-        <h1 className="text-3xl md:text-4xl font-semibold">📰 </h1>
-        <p className="text-base md:text-lg text-slate-600 max-w-3xl mx-auto">"It only takes one win to change your trajectory"
+        <h1 className="text-3xl md:text-4xl font-semibold text-gray-100">📰 </h1>
+        <p className="text-base md:text-lg text-gray-400 max-w-3xl mx-auto">"It only takes one win to change your trajectory"
         </p>
-        {aviso && <p className="text-amber-600 text-sm">⚠️ {aviso}</p>}
+        {aviso && <p className="text-amber-400 text-sm">⚠️ {aviso}</p>}
       </section>
 
       {carregando && (
-        <div className="text-center text-slate-600">🔄 Carregando artigos...</div>
+        <div className="text-center text-gray-400">🔄 Carregando artigos...</div>
       )}
 
       {/* Lista de Artigos */}
       <section>
         <div className="grid grid-cols-1 gap-4">
           {artigos.map((artigo) => (
-            <article key={artigo.id} className="card p-5">
+            <article key={artigo.id} className="border border-[#222222] bg-[#111111] rounded-lg p-5 hover:border-blue-500 transition-colors">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3 text-sm">
-                  <span className="inline-flex items-center rounded-full bg-slate-100 text-slate-700 px-3 py-1">
+                  <span className="inline-flex items-center rounded-full bg-blue-500/20 text-blue-400 px-3 py-1">
                     {artigo.categoria}
                   </span>
-                  <span className="text-slate-500">{formatarData(artigo.data)}</span>
+                  <span className="text-gray-400">{formatarData(artigo.data)}</span>
                 </div>
 
-                <h3 className="text-lg md:text-xl font-semibold leading-snug">
+                <h3 className="text-lg md:text-xl font-semibold leading-snug text-gray-100">
                   {artigo.titulo}
                 </h3>
 
                 {artigo.resumo && (
-                  <p className="text-slate-700 text-sm leading-relaxed">
+                  <p className="text-gray-400 text-sm leading-relaxed">
                     {artigo.resumo}
                   </p>
                 )}
 
                 <div className="flex items-center justify-between">
-                  <span className="text-xs italic text-slate-500">
+                  <span className="text-xs italic text-gray-500">
                     {artigo.fonte || dominio(artigo.link)}
                   </span>
                   <a
                     href={artigo.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-secondary"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors"
                   >
                     📖 Ler Artigo
                   </a>
@@ -125,8 +125,8 @@ export default function HomePage() {
         {!carregando && artigos.length === 0 && (
           <div className="text-center py-12">
             <div className="text-5xl mb-3">🔍</div>
-            <h3 className="text-lg font-medium mb-1">Nenhum artigo encontrado</h3>
-            <p className="text-slate-600">Tente novamente mais tarde.</p>
+            <h3 className="text-lg font-medium mb-1 text-gray-100">Nenhum artigo encontrado</h3>
+            <p className="text-gray-400">Tente novamente mais tarde.</p>
           </div>
         )}
       </section>
