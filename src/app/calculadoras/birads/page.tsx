@@ -59,7 +59,7 @@ const Chip: React.FC<ChipProps> = ({ active, onClick, title, children }) => (
     onClick={onClick}
     title={title}
     className={`px-2 py-1 text-xs border rounded ${
-      active ? "bg-blue-500 text-white" : "bg-gray-100"
+      active ? "bg-blue-600 text-white" : "bg-gray-100"
     }`}
   >
     {children}
@@ -311,10 +311,10 @@ export default function BiradsUsPage() {
   /* -------- Render -------- */
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">BI-RADS (Ultrassom)</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-100 text-gray-100">BI-RADS (Ultrassom)</h1>
 
       {achados.map((a, idx) => (
-        <div key={idx} className="border rounded p-4 mb-6 bg-gray-50 space-y-3">
+        <div key={idx} className="border border-[#222222] rounded p-4 mb-6 bg-[#111111] space-y-3">
           {/* Linha 1 — ação rápida (apenas cisto simples) */}
           <div className="flex flex-wrap gap-1">
             <Chip active={false} onClick={() => tplCistoSimples(idx)} title="Marca cisto simples clássico">
@@ -324,16 +324,16 @@ export default function BiradsUsPage() {
 
           {/* Linha 2 — Mama / Relógio / Medidas em UMA linha + distâncias */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-gray-600">Mama:</span>
+            <span className="text-[11px] text-gray-400">Mama:</span>
             {["direita", "esquerda"].map((op) => (
               <Chip key={op} active={a.mama === op} onClick={() => upd(idx, { mama: a.mama === op ? "" : op })}>
                 {op}
               </Chip>
             ))}
 
-            <span className="ml-3 text-[11px] text-gray-600">Relógio:</span>
+            <span className="ml-3 text-[11px] text-gray-400">Relógio:</span>
             <input
-              className="border p-1.5 rounded w-20 text-xs"
+              className="border border-[#222222] p-1.5 rounded w-20 text-xs"
               placeholder="ex.: 4"
               value={a.hora}
               onChange={(e) => upd(idx, { hora: e.target.value })}
@@ -343,7 +343,7 @@ export default function BiradsUsPage() {
               {["1ª", "2ª", "3ª"].map((lab, iM) => (
                 <input
                   key={lab}
-                  className="border p-1.5 rounded w-28 text-xs"
+                  className="border border-[#222222] p-1.5 rounded w-28 text-xs"
                   placeholder={`${lab} medida (cm)`}
                   value={a.medidas[iM] || ""}
                   onChange={(e) => {
@@ -354,13 +354,13 @@ export default function BiradsUsPage() {
                 />
               ))}
               <input
-                className="border p-1.5 rounded w-28 text-xs"
+                className="border border-[#222222] p-1.5 rounded w-28 text-xs"
                 placeholder="Dist. pele (cm)"
                 value={a.distPele}
                 onChange={(e) => upd(idx, { distPele: e.target.value })}
               />
               <input
-                className="border p-1.5 rounded w-28 text-xs"
+                className="border border-[#222222] p-1.5 rounded w-28 text-xs"
                 placeholder="Dist. papila (cm)"
                 value={a.distPapila}
                 onChange={(e) => upd(idx, { distPapila: e.target.value })}
@@ -370,7 +370,7 @@ export default function BiradsUsPage() {
 
           {/* Tipo do achado */}
           <div className="flex flex-wrap gap-1">
-            <span className="text-[11px] text-gray-600">Tipo:</span>
+            <span className="text-[11px] text-gray-400">Tipo:</span>
             {["nódulo", "cisto"].map((t) => (
               <Chip key={t} active={a.tipo === t} onClick={() => upd(idx, { tipo: t as Achado["tipo"] })}>
                 {t}
@@ -540,7 +540,7 @@ export default function BiradsUsPage() {
             <div>
               <div className="text-xs font-semibold">Correlação mamográfica</div>
               <input
-                className="border p-1.5 rounded w-full text-xs"
+                className="border border-[#222222] p-1.5 rounded w-full text-xs"
                 placeholder="ex.: sem correlação suspeita / calcificações suspeitas correlatas / padrão benigno"
                 value={a.correlacaoMammo}
                 onChange={(e) => upd(idx, { correlacaoMammo: e.target.value })}
@@ -574,7 +574,7 @@ export default function BiradsUsPage() {
                   Sugerir
                 </Chip>
               </div>
-              {a.birads && <p className="text-[11px] text-gray-700 mt-1">Conduta: {condutaPorBirads(a.birads)}</p>}
+              {a.birads && <p className="text-[11px] text-gray-300 mt-1">Conduta: {condutaPorBirads(a.birads)}</p>}
             </div>
           </div>
         </div>
@@ -591,13 +591,13 @@ export default function BiradsUsPage() {
       {/* Pré-visualização */}
       <div className="mt-6">
         <div className="text-sm font-semibold">Pré-visualização</div>
-        <textarea className="w-full border p-3 rounded h-40 mt-2" value={textoPreview} readOnly />
+        <textarea className="w-full border border-[#222222] p-3 rounded h-40 mt-2" value={textoPreview} readOnly />
       </div>
 
       <div className="flex gap-3 mt-3">
         <button
           onClick={() => navigator.clipboard.writeText(textoPreview)}
-          className="bg-blue-500 text-white px-3 py-1.5 rounded text-sm"
+          className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm"
         >
           Copiar texto puro
         </button>
@@ -615,7 +615,7 @@ export default function BiradsUsPage() {
       </div>
 
       {/* Condutas */}
-      <div className="mt-6 border rounded p-4 bg-gray-50">
+      <div className="mt-6 border border-[#222222] rounded p-4 bg-[#111111]">
         <h3 className="font-semibold mb-2 text-sm">Condutas (por categoria atribuída ou sugerida):</h3>
         <pre className="whitespace-pre-wrap text-xs">{condutasTexto}</pre>
         <button
@@ -624,7 +624,7 @@ export default function BiradsUsPage() {
         >
           Copiar condutas
         </button>
-        <p className="text-[11px] text-gray-600 mt-2">
+        <p className="text-[11px] text-gray-400 mt-2">
           * Ajuste ao contexto (idade, risco, correlação mamográfica, achados associados, etc.).
         </p>
       </div>

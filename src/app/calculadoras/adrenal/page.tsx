@@ -91,20 +91,20 @@ export default function Page() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Calculadora de Adrenal</h1>
-      <p className="text-sm text-gray-600">
+      <h1 className="text-2xl font-bold text-gray-100 text-gray-100">Calculadora de Adrenal</h1>
+      <p className="text-sm text-gray-400">
       </p>
 
       {/* ETAPA 1 */}
-      <div className="space-y-4 p-4 border rounded-2xl shadow-sm">
-        <h2 className="text-lg font-semibold">1) Avaliação inicial</h2>
+      <div className="space-y-4 p-4 border border-[#222222] rounded-2xl shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-100 text-gray-100">1) Avaliação inicial</h2>
         <div className="grid md:grid-cols-4 gap-3">
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium">Maior diâmetro (cm)</span>
             <input
               type="number"
               step="0.1"
-              className="border rounded-lg p-2"
+              className="border border-[#222222] rounded-lg p-2"
               value={diametro}
               onChange={(e) => setDiametro(e.target.value)}
             />
@@ -114,7 +114,7 @@ export default function Page() {
             <input
               type="number"
               step="1"
-              className="border rounded-lg p-2"
+              className="border border-[#222222] rounded-lg p-2"
               value={huSem}
               onChange={(e) => setHuSem(e.target.value)}
             />
@@ -141,22 +141,22 @@ export default function Page() {
           <div className="text-sm text-gray-500">Resultado inicial</div>
           <div className="text-base font-medium">{inicial.texto}</div>
           {inicial.avisoTamanho && (
-            <div className="text-xs text-gray-600 mt-1">{inicial.avisoTamanho}</div>
+            <div className="text-xs text-gray-400 mt-1">{inicial.avisoTamanho}</div>
           )}
         </div>
       </div>
 
       {/* ETAPA 2 */}
       {inicial.status === "recomendado" && (
-        <div className="space-y-4 p-4 border rounded-2xl shadow-sm">
-          <h2 className="text-lg font-semibold">2) Washout (se indicado)</h2>
+        <div className="space-y-4 p-4 border border-[#222222] rounded-2xl shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-100 text-gray-100">2) Washout (se indicado)</h2>
           <div className="grid md:grid-cols-3 gap-3">
             <label className="flex flex-col gap-1">
               <span className="text-sm font-medium">Realce máximo (UH)</span>
               <input
                 type="number"
                 step="1"
-                className="border rounded-lg p-2"
+                className="border border-[#222222] rounded-lg p-2"
                 value={huPico}
                 onChange={(e) => setHuPico(e.target.value)}
               />
@@ -166,7 +166,7 @@ export default function Page() {
               <input
                 type="number"
                 step="1"
-                className="border rounded-lg p-2"
+                className="border border-[#222222] rounded-lg p-2"
                 value={huTardio}
                 onChange={(e) => setHuTardio(e.target.value)}
               />
@@ -174,7 +174,7 @@ export default function Page() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-3">
-            <div className="p-4 border rounded-2xl bg-white">
+            <div className="p-4 border border-[#222222] rounded-2xl bg-[#0a0a0a]">
               <div className="text-sm text-gray-500">APW</div>
               <div className="text-2xl font-semibold">
                 {washout.aw !== null && Number.isFinite(washout.aw)
@@ -182,7 +182,7 @@ export default function Page() {
                   : "–"}
               </div>
             </div>
-            <div className="p-4 border rounded-2xl bg-white">
+            <div className="p-4 border border-[#222222] rounded-2xl bg-[#0a0a0a]">
               <div className="text-sm text-gray-500">RPW</div>
               <div className="text-2xl font-semibold">
                 {washout.rw !== null && Number.isFinite(washout.rw)
@@ -190,7 +190,7 @@ export default function Page() {
                   : "–"}
               </div>
             </div>
-            <div className="p-4 border rounded-2xl bg-blue-50 border-blue-200">
+            <div className="p-4 border border-[#222222] rounded-2xl bg-blue-50 border-blue-200">
               <div className="text-sm text-gray-500">Interpretação</div>
               <div className="text-base font-medium">{washout.interpretacao}</div>
             </div>
@@ -199,18 +199,18 @@ export default function Page() {
       )}
 
       {washout.fraseFinal && (
-        <div className="p-4 border rounded-2xl bg-gray-50">
+        <div className="p-4 border border-[#222222] rounded-2xl bg-[#111111]">
           <div className="text-sm text-gray-500">Frase final sugerida para laudo</div>
           <div className="text-base font-medium">{washout.fraseFinal}</div>
         </div>
       )}
 
       {/* NOTAS */}
-      <details className="p-4 border rounded-2xl bg-gray-50">
+      <details className="p-4 border border-[#222222] rounded-2xl bg-[#111111]">
         <summary className="cursor-pointer font-medium">
           Notas rápidas (Radiopaedia/ACR)
         </summary>
-        <ul className="list-disc pl-5 text-sm text-gray-700 mt-2 space-y-1">
+        <ul className="list-disc pl-5 text-sm text-gray-300 mt-2 space-y-1">
           <li>
             <b>Inicial:</b> ≤10 UH + homogêneo → típico adenoma rico em lipídios → sem
             washout. 11–20 UH → indeterminado → fazer washout CT ou RM CSI. ≥20 UH →

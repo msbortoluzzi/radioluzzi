@@ -361,7 +361,7 @@ export default function Page() {
   };
 
   return (
-    <div className="flex gap-6 p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-7xl mx-auto">
       {/* Coluna principal com fórmulas */}
       <div className="flex-1">
         <h1 className="text-2xl font-bold text-gray-100 mb-6">FÓRMULAS</h1>
@@ -604,7 +604,7 @@ export default function Page() {
       </div>
 
       {/* Calculadora fixa (sticky) */}
-      <div className="w-64 sticky top-6 self-start">
+      <div className="w-full lg:w-64 lg:sticky lg:top-6 lg:self-start">
         <div className="border border-[#222222] p-3 rounded bg-[#111111] shadow-md">
           <h3 className="font-semibold mb-2 text-sm text-gray-100">Calculadora</h3>
           <div className="bg-[#0a0a0a] border border-[#333333] p-2 rounded mb-2 text-right text-lg font-mono text-gray-100">
@@ -619,7 +619,7 @@ export default function Page() {
               <button 
                 key={btn} 
                 onClick={() => handleButton(btn)} 
-                className="bg-[#222222] text-gray-100 rounded py-2 text-sm font-bold hover:bg-gray-300"
+                className="bg-[#222222] text-gray-100 rounded py-2 text-sm font-bold hover:bg-[#333333] transition-colors"
               >
                 {btn === "*" ? "×" : btn === "/" ? "÷" : btn}
               </button>

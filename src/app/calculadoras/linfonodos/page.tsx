@@ -87,7 +87,7 @@ export default function Page() {
 
   return (
     <main className="p-6 space-y-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-blue-800">
+      <h1 className="text-2xl font-bold text-blue-800 text-gray-100 text-gray-100">
         Achados ultrassom cervical
       </h1>
 
@@ -118,7 +118,7 @@ export default function Page() {
           a.texto !== "" && a.texto !== undefined ? a.texto : textoGerado;
 
         return (
-          <div key={idx} className="border p-4 rounded space-y-4">
+          <div key={idx} className="border border-[#222222] p-4 rounded space-y-4">
             {a.tipo === "linfonodo" && (
               <>
                 <h3 className="font-semibold">Características</h3>
@@ -152,7 +152,7 @@ export default function Page() {
                       key={estado}
                       className={`border rounded px-3 py-1 ${
                         a.criterios.hilo_estado === estado
-                          ? "bg-blue-500 text-white"
+                          ? "bg-blue-600 text-white"
                           : "bg-gray-100"
                       }`}
                       onClick={() => atualizar(idx, "hilo_estado", estado)}
@@ -200,7 +200,7 @@ export default function Page() {
                       key={m}
                       className={`border rounded px-3 py-1 ${
                         a.criterios.margens === m
-                          ? "bg-blue-500 text-white"
+                          ? "bg-blue-600 text-white"
                           : "bg-gray-100"
                       }`}
                       onClick={() => atualizar(idx, "margens", m)}
@@ -214,7 +214,7 @@ export default function Page() {
                       key={v}
                       className={`border rounded px-3 py-1 ${
                         a.criterios.vasc_tipo === v
-                          ? "bg-blue-500 text-white"
+                          ? "bg-blue-600 text-white"
                           : "bg-gray-100"
                       }`}
                       onClick={() => atualizar(idx, "vasc_tipo", v)}
@@ -231,7 +231,7 @@ export default function Page() {
                       key={n}
                       className={`border rounded px-3 py-1 ${
                         a.criterios.nivel === n
-                          ? "bg-blue-500 text-white"
+                          ? "bg-blue-600 text-white"
                           : "bg-gray-100"
                       }`}
                       onClick={() => atualizar(idx, "nivel", n)}
@@ -242,7 +242,7 @@ export default function Page() {
                   <button
                     className={`border rounded px-3 py-1 ${
                       a.criterios.local === "intraparotideo"
-                        ? "bg-blue-500 text-white"
+                        ? "bg-blue-600 text-white"
                         : "bg-gray-100"
                     }`}
                     onClick={() =>
@@ -259,7 +259,7 @@ export default function Page() {
                       key={l}
                       className={`border rounded px-3 py-1 ${
                         a.criterios.lado === l
-                          ? "bg-blue-500 text-white"
+                          ? "bg-blue-600 text-white"
                           : "bg-gray-100"
                       }`}
                       onClick={() => atualizar(idx, "lado", l)}
@@ -278,7 +278,7 @@ export default function Page() {
                       onChange={(e) =>
                         atualizarMedida(idx, i, e.target.value)
                       }
-                      className="border p-2 rounded w-24"
+                      className="border border-[#222222] p-2 rounded w-24"
                     />
                   ))}
                 </div>
@@ -289,7 +289,7 @@ export default function Page() {
                   if (!isNaN(longo) && !isNaN(curto) && curto !== 0) {
                     const ratio = (longo / curto).toFixed(2);
                     return (
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-gray-400 mt-1">
                         Razão C/L: {ratio}
                       </p>
                     );
@@ -308,7 +308,7 @@ export default function Page() {
                       key={g}
                       className={`border rounded px-3 py-1 ${
                         a.criterios.glandula === g
-                          ? "bg-blue-500 text-white"
+                          ? "bg-blue-600 text-white"
                           : "bg-gray-100"
                       }`}
                       onClick={() => atualizar(idx, "glandula", g)}
@@ -321,7 +321,7 @@ export default function Page() {
                       key={l}
                       className={`border rounded px-3 py-1 ${
                         a.criterios.lado === l
-                          ? "bg-blue-500 text-white"
+                          ? "bg-blue-600 text-white"
                           : "bg-gray-100"
                       }`}
                       onClick={() => atualizar(idx, "lado", l)}
@@ -333,19 +333,19 @@ export default function Page() {
                 <h3 className="font-semibold">Características</h3>
                 <input
                   placeholder="Tipo (sólido/cístico)"
-                  className="border p-2 rounded w-40"
+                  className="border border-[#222222] p-2 rounded w-40"
                   value={a.criterios.tipo || ""}
                   onChange={(e) => atualizar(idx, "tipo", e.target.value)}
                 />
                 <input
                   placeholder="Ecogenicidade"
-                  className="border p-2 rounded w-40"
+                  className="border border-[#222222] p-2 rounded w-40"
                   value={a.criterios.eco || ""}
                   onChange={(e) => atualizar(idx, "eco", e.target.value)}
                 />
                 <input
                   placeholder="Margens"
-                  className="border p-2 rounded w-40"
+                  className="border border-[#222222] p-2 rounded w-40"
                   value={a.criterios.margens || ""}
                   onChange={(e) =>
                     atualizar(idx, "margens", e.target.value)
@@ -360,7 +360,7 @@ export default function Page() {
                       onChange={(e) =>
                         atualizarMedida(idx, i, e.target.value)
                       }
-                      className="border p-2 rounded w-24"
+                      className="border border-[#222222] p-2 rounded w-24"
                     />
                   ))}
                 </div>
@@ -373,7 +373,7 @@ export default function Page() {
               <textarea
                 value={textoMostrado}
                 onChange={(e) => atualizarTexto(idx, e.target.value)}
-                className="border p-2 rounded w-full h-24"
+                className="border border-[#222222] p-2 rounded w-full h-24"
               />
             </div>
           </div>
@@ -381,7 +381,7 @@ export default function Page() {
       })}
 
       {achados.length > 0 && (
-        <div className="border p-4 rounded bg-gray-50">
+        <div className="border border-[#222222] p-4 rounded bg-[#111111]">
           <h3 className="font-semibold mb-2">Copiar todas as frases:</h3>
           <button
             className="mt-2 bg-blue-600 text-white px-4 py-2 rounded"

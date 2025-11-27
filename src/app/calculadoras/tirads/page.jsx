@@ -193,7 +193,7 @@ export default function Page() {
 
   return (
     <main className="p-6 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-blue-800">TI-RADS (ACR)</h1>
+      <h1 className="text-2xl font-bold text-blue-800 text-gray-100 text-gray-100">TI-RADS (ACR)</h1>
 
       <button
         onClick={adicionar}
@@ -203,7 +203,7 @@ export default function Page() {
       </button>
 
       {nodulos.map((n, idx) => (
-        <div key={idx} className="border p-4 rounded space-y-4">
+        <div key={idx} className="border border-[#222222] p-4 rounded space-y-4">
           {/* 1) Medidas */}
           <div>
             <h3 className="font-semibold">Medidas (cm)</h3>
@@ -217,7 +217,7 @@ export default function Page() {
                     novas[i] = e.target.value;
                     atualizar(idx, "medidas", novas);
                   }}
-                  className="border p-1.5 rounded w-20 text-sm"
+                  className="border border-[#222222] p-1.5 rounded w-20 text-sm"
                   placeholder={i === 0 ? "Maior" : i === 1 ? "2º" : "3º"}
                 />
               ))}
@@ -229,7 +229,7 @@ export default function Page() {
             <h3 className="font-semibold">Localização</h3>
             <div className="flex flex-wrap gap-1">
               <button
-                className={`border rounded px-2 py-1 text-xs ${n.istmo ? "bg-blue-500 text-white" : "bg-gray-100"}`}
+                className={`border rounded px-2 py-1 text-xs ${n.istmo ? "bg-blue-600 text-white" : "bg-gray-100"}`}
                 onClick={() => {
                   atualizar(idx, "istmo", true);
                   atualizar(idx, "terco", "");
@@ -243,7 +243,7 @@ export default function Page() {
                   {["SUPERIOR", "MÉDIO", "INFERIOR"].map((t) => (
                     <button
                       key={t}
-                      className={`border rounded px-2 py-1 text-xs ${n.terco === t ? "bg-blue-500 text-white" : "bg-gray-100"}`}
+                      className={`border rounded px-2 py-1 text-xs ${n.terco === t ? "bg-blue-600 text-white" : "bg-gray-100"}`}
                       onClick={() => {
                         atualizar(idx, "terco", t);
                         atualizar(idx, "istmo", false);
@@ -255,7 +255,7 @@ export default function Page() {
                   {["DIREITO", "ESQUERDO"].map((l) => (
                     <button
                       key={l}
-                      className={`border rounded px-2 py-1 text-xs ${n.lado === l ? "bg-blue-500 text-white" : "bg-gray-100"}`}
+                      className={`border rounded px-2 py-1 text-xs ${n.lado === l ? "bg-blue-600 text-white" : "bg-gray-100"}`}
                       onClick={() => {
                         atualizar(idx, "lado", l);
                         atualizar(idx, "istmo", false);
@@ -279,7 +279,7 @@ export default function Page() {
                     key={i}
                     className={`px-2 py-1 text-xs border rounded ${
                       n.frases[criterio] === opcao.texto
-                        ? "bg-blue-500 text-white"
+                        ? "bg-blue-600 text-white"
                         : "bg-gray-100"
                     }`}
                     onClick={() => selecionar(idx, criterio, opcao.valor, opcao.texto)}
@@ -301,7 +301,7 @@ export default function Page() {
                 return (
                   <button
                     key={f.key}
-                    className={`px-2 py-1 text-xs border rounded ${ativo ? "bg-blue-500 text-white" : "bg-gray-100"}`}
+                    className={`px-2 py-1 text-xs border rounded ${ativo ? "bg-blue-600 text-white" : "bg-gray-100"}`}
                     onClick={() => toggleFoco(idx, f)}
                     title={f.label}
                   >
@@ -310,14 +310,14 @@ export default function Page() {
                 );
               })}
               <button
-                className="px-2 py-1 text-xs border rounded bg-gray-100"
+                className="px-2 py-1 text-xs border border-[#222222] rounded bg-[#222222]"
                 onClick={() => semMicro(idx)}
                 title="Desmarcar microcalcificações"
               >
                 Sem microcalcificações
               </button>
             </div>
-            <p className="text-[11px] text-gray-600 mt-1">
+            <p className="text-[11px] text-gray-400 mt-1">
               • Pontos dos focos são <strong>aditivos</strong> (macro +1, periférico +2, micro +3; “cauda de cometa” = 0).<br />
               • Nos demais critérios, selecione <strong>apenas uma</strong> opção.
             </p>
@@ -327,7 +327,7 @@ export default function Page() {
 
       {/* Frases para laudo */}
       {nodulos.length > 0 && (
-        <div className="border p-4 rounded bg-gray-50 space-y-2">
+        <div className="border border-[#222222] p-4 rounded bg-[#111111] space-y-2">
           <h3 className="font-semibold">Frases para laudo:</h3>
           {nodulos.map((n, i) => (
             <p
@@ -351,7 +351,7 @@ export default function Page() {
 
       {/* Condutas — quadro separado */}
       {nodulos.length > 0 && (
-        <div className="border p-4 rounded bg-gray-50 space-y-2">
+        <div className="border border-[#222222] p-4 rounded bg-[#111111] space-y-2">
           <h3 className="font-semibold">Condutas sugeridas (ACR TI-RADS):</h3>
           {nodulos.map((n, i) => (
             <p key={i} className="text-sm">
@@ -364,7 +364,7 @@ export default function Page() {
           >
             Copiar condutas
           </button>
-          <p className="text-[11px] text-gray-600">
+          <p className="text-[11px] text-gray-400">
             * Ajuste conforme contexto clínico (idade, fatores de risco, sintomas compressivos, gestação, etc.).
           </p>
         </div>
