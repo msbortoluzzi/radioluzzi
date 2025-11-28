@@ -9,25 +9,20 @@ import {
   type Option,
   type ReportTemplate,
 } from "@/lib/supabase-dynamic";
-import {
-  AIService,
-  type PatientData,
-  type ReportGenerationData,
-} from "@/lib/ai-service";
+import { AIService } from "@/lib/ai-service";
+import type { PatientData, ReportGenerationData } from "@/lib/report-utils";
 
 interface CategoryWithOptions extends Category {
   options: Option[];
 }
 
 const ToraxDinamicoPage: React.FC = () => {
-  // Estados principais
   const [examType, setExamType] = useState<ExamType | null>(null);
   const [categories, setCategories] = useState<CategoryWithOptions[]>([]);
   const [template, setTemplate] = useState<ReportTemplate | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados do formulário
   const [patientData, setPatientData] = useState<PatientData>({
     name: "",
     age: "",
@@ -36,16 +31,13 @@ const ToraxDinamicoPage: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [additionalNotes, setAdditionalNotes] = useState("");
 
-  // Estados do laudo
   const [reportData, setReportData] = useState<{
     rawText: string;
     aiProcessedText: string;
     finalReport: string;
   } | null>(null);
   const [generating, setGenerating] = useState(false);
-  const [aiAvailable, setAiAvailable] = useState(true);
 
-  // Guards
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -54,7 +46,6 @@ const ToraxDinamicoPage: React.FC = () => {
     };
   }, []);
 
-  // ---------- Carregamento inicial ----------
   const loadExamData = useCallback(async () => {
     try {
       setLoading(true);
@@ -63,9 +54,7 @@ const ToraxDinamicoPage: React.FC = () => {
       const exam = await SupabaseService.getExamBySlug("torax");
       if (!exam) throw new Error("Exame de tórax não encontrado");
 
-      // Estrutura
       const structure = await SupabaseService.getExamStructure(exam.id);
-      // Template
       const examTemplate = await SupabaseService.getReportTemplate(exam.id);
 
       if (!mountedRef.current) return;
@@ -81,22 +70,10 @@ const ToraxDinamicoPage: React.FC = () => {
     }
   }, []);
 
-  const checkAIAvailability = useCallback(async () => {
-    try {
-      const available = await AIService.validateAI();
-      if (mountedRef.current) setAiAvailable(!!available);
-    } catch {
-      if (mountedRef.current) setAiAvailable(false);
-    }
-  }, []);
-
   useEffect(() => {
-    // Carrega tudo em paralelo
     loadExamData();
-    checkAIAvailability();
-  }, [loadExamData, checkAIAvailability]);
+  }, [loadExamData]);
 
-  // ---------- Ações ----------
   const toggleOption = useCallback((optionId: string) => {
     setSelectedOptions((prev) =>
       prev.includes(optionId) ? prev.filter((id) => id !== optionId) : [...prev, optionId]
@@ -114,7 +91,6 @@ const ToraxDinamicoPage: React.FC = () => {
       try {
         setGenerating(true);
 
-        // Busca opções selecionadas (garante consistência com DB)
         const selectedOptionObjects = await SupabaseService.getOptionsByIds(selectedOptions);
 
         const generationData: ReportGenerationData = {
@@ -125,7 +101,7 @@ const ToraxDinamicoPage: React.FC = () => {
           additionalNotes,
         };
 
-        if (useAI && aiAvailable) {
+        if (useAI) {
           const result = await AIService.generateReport(generationData);
           if (!mountedRef.current) return;
           setReportData(result);
@@ -145,7 +121,7 @@ const ToraxDinamicoPage: React.FC = () => {
         if (mountedRef.current) setGenerating(false);
       }
     },
-    [examType, template, aiAvailable, selectedOptions, patientData, categories, additionalNotes]
+    [examType, template, selectedOptions, patientData, categories, additionalNotes]
   );
 
   const saveReport = useCallback(async () => {
@@ -186,7 +162,6 @@ const ToraxDinamicoPage: React.FC = () => {
     setReportData(null);
   }, []);
 
-  // ---------- UI ----------
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -212,7 +187,7 @@ const ToraxDinamicoPage: React.FC = () => {
             onClick={loadExamData}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
-            Tentar Novamente
+            Tentar novamente
           </button>
         </div>
       </div>
@@ -223,7 +198,6 @@ const ToraxDinamicoPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-6xl">
-          {/* Header */}
           <div className="mb-8">
             <Link href="/laudos" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,38 +210,21 @@ const ToraxDinamicoPage: React.FC = () => {
                 <h1 className="text-3xl font-bold text-gray-900">{examType?.title}</h1>
                 <p className="text-gray-600 mt-2">{examType?.description}</p>
               </div>
-              <div className="flex items-center space-x-2">
-                {aiAvailable ? (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    IA Ativa
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    IA Indisponível
-                  </span>
-                )}
+              <div className="flex items-center space-x-2 text-sm text-green-700 bg-green-50 px-3 py-1 rounded-full">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                IA disponível
               </div>
             </div>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-2">
-            {/* Formulário */}
             <div className="space-y-6">
-              {/* Dados do Paciente */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">Dados do Paciente</h2>
                 <div className="space-y-4">
@@ -309,7 +266,6 @@ const ToraxDinamicoPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Categorias Dinâmicas */}
               {categories.map((category) => (
                 <div key={category.id} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                   <h2 className="mb-4 text-lg font-semibold text-gray-900">{category.name}</h2>
@@ -335,7 +291,6 @@ const ToraxDinamicoPage: React.FC = () => {
                 </div>
               ))}
 
-              {/* Observações */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">Observações Adicionais</h2>
                 <textarea
@@ -348,9 +303,7 @@ const ToraxDinamicoPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Preview do Laudo */}
             <div className="space-y-6">
-              {/* Botões de Ação */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -370,7 +323,9 @@ const ToraxDinamicoPage: React.FC = () => {
                         </svg>
                         Gerando...
                       </>
-                    ) : <>{aiAvailable ? "🤖 Gerar com IA" : "📝 Gerar Laudo"}</>}
+                    ) : (
+                      <>Gerar com IA</>
+                    )}
                   </button>
 
                   <button
@@ -378,7 +333,7 @@ const ToraxDinamicoPage: React.FC = () => {
                     disabled={generating || selectedOptions.length === 0}
                     className="rounded-md bg-slate-700 px-4 py-2 text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
-                    🧱 Fallback (sem IA)
+                    Fallback (sem IA)
                   </button>
 
                   <button
@@ -386,7 +341,7 @@ const ToraxDinamicoPage: React.FC = () => {
                     disabled={!reportData}
                     className="rounded-md bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
-                    📋 Copiar
+                    Copiar
                   </button>
 
                   <button
@@ -394,19 +349,18 @@ const ToraxDinamicoPage: React.FC = () => {
                     disabled={!reportData}
                     className="rounded-md bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
-                    💾 Salvar
+                    Salvar
                   </button>
 
                   <button
                     onClick={clearForm}
                     className="col-span-2 rounded-md bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
                   >
-                    🗑️ Limpar
+                    Limpar
                   </button>
                 </div>
               </div>
 
-              {/* Laudo Gerado */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">Preview do Laudo</h2>
                 <div className="min-h-96 rounded-md bg-gray-50 p-4">
@@ -416,13 +370,12 @@ const ToraxDinamicoPage: React.FC = () => {
                     </pre>
                   ) : (
                     <p className="italic text-gray-500">
-                      Selecione as opções e clique em &quot;Gerar&quot; para visualizar o laudo
+                      Selecione as opções e clique em "Gerar" para visualizar o laudo
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Estatísticas */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                 <h3 className="mb-4 text-lg font-semibold text-gray-900">Estatísticas</h3>
                 <div className="grid grid-cols-2 gap-4 text-center">
@@ -439,7 +392,6 @@ const ToraxDinamicoPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            {/* /Preview */}
           </div>
         </div>
       </div>

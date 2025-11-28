@@ -87,7 +87,7 @@ export default function Page() {
 
   return (
     <main className="p-6 space-y-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-blue-800 text-gray-100 text-gray-100">
+      <h1 className="text-2xl font-bold text-blue-800 text-gray-100">
         Achados ultrassom cervical
       </h1>
 
@@ -245,9 +245,7 @@ export default function Page() {
                         ? "bg-blue-600 text-white"
                         : "bg-gray-100"
                     }`}
-                    onClick={() =>
-                      atualizar(idx, "local", "intraparotideo")
-                    }
+                    onClick={() => atualizar(idx, "local", "intraparotideo")}
                   >
                     intraparotídeo
                   </button>
@@ -275,15 +273,12 @@ export default function Page() {
                     <input
                       key={i}
                       value={m}
-                      onChange={(e) =>
-                        atualizarMedida(idx, i, e.target.value)
-                      }
+                      onChange={(e) => atualizarMedida(idx, i, e.target.value)}
                       className="border border-[#222222] p-2 rounded w-24"
                     />
                   ))}
                 </div>
 
-                {/* Mostrar razão C/L */}
                 {(() => {
                   const [longo, curto] = a.medidas.map(parseFloat);
                   if (!isNaN(longo) && !isNaN(curto) && curto !== 0) {
@@ -330,36 +325,34 @@ export default function Page() {
                     </button>
                   ))}
                 </div>
+
                 <h3 className="font-semibold">Características</h3>
                 <input
-                  placeholder="Tipo (sólido/cístico)" className="placeholder-gray-500" className="placeholder-gray-500"
-                  className="border border-[#222222] p-2 rounded w-40"
+                  placeholder="Tipo (sólido/cístico)"
+                  className="placeholder-gray-500 border border-[#222222] p-2 rounded w-40"
                   value={a.criterios.tipo || ""}
                   onChange={(e) => atualizar(idx, "tipo", e.target.value)}
                 />
                 <input
-                  placeholder="Ecogenicidade" className="placeholder-gray-500" className="placeholder-gray-500"
-                  className="border border-[#222222] p-2 rounded w-40"
+                  placeholder="Ecogenicidade"
+                  className="placeholder-gray-500 border border-[#222222] p-2 rounded w-40"
                   value={a.criterios.eco || ""}
                   onChange={(e) => atualizar(idx, "eco", e.target.value)}
                 />
                 <input
-                  placeholder="Margens" className="placeholder-gray-500" className="placeholder-gray-500"
-                  className="border border-[#222222] p-2 rounded w-40"
+                  placeholder="Margens"
+                  className="placeholder-gray-500 border border-[#222222] p-2 rounded w-40"
                   value={a.criterios.margens || ""}
-                  onChange={(e) =>
-                    atualizar(idx, "margens", e.target.value)
-                  }
+                  onChange={(e) => atualizar(idx, "margens", e.target.value)}
                 />
+
                 <h3 className="font-semibold">Medidas (cm)</h3>
                 <div className="flex gap-2">
                   {a.medidas.map((m, i) => (
                     <input
                       key={i}
                       value={m}
-                      onChange={(e) =>
-                        atualizarMedida(idx, i, e.target.value)
-                      }
+                      onChange={(e) => atualizarMedida(idx, i, e.target.value)}
                       className="border border-[#222222] p-2 rounded w-24"
                     />
                   ))}
@@ -367,7 +360,6 @@ export default function Page() {
               </>
             )}
 
-            {/* Pré-laudo editável */}
             <div>
               <h3 className="font-semibold mt-4">Pré-laudo (editável)</h3>
               <textarea

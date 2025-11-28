@@ -1,7 +1,6 @@
 import OpenAI from 'openai'
 import { supabase } from './supabase-dynamic'
 
-// Lazy initialization para evitar erros em build time
 let openaiInstance: OpenAI | null = null
 
 function getOpenAI(): OpenAI {
@@ -41,35 +40,31 @@ export interface InterpretedFinding {
 }
 
 export class RadiologyAIService {
-  
-  // Buscar conhecimento radiológico por palavras-chave
   static async searchKnowledge(keywords: string[], modality?: string): Promise<RadiologyKnowledge[]> {
     let query = supabase
       .from('radiology_knowledge')
       .select('*')
       .eq('active', true)
       .overlaps('keywords', keywords)
-    
+
     if (modality) {
       query = query.or(`modality.eq.${modality},modality.is.null`)
     }
-    
+
     const { data, error } = await query
-    
+
     if (error) throw error
     return data || []
   }
 
-  // Interpretar texto ditado e extrair achados
   static async interpretVoiceInput(
     voiceText: string,
     modality: string,
     currentSection?: string
   ): Promise<InterpretedFinding[]> {
     try {
-      // Usar IA para extrair achados estruturados
       const systemPrompt = `Você é um assistente de radiologia especializado em interpretar ditados médicos.
-      
+
 Sua tarefa é extrair achados radiológicos de um texto ditado e estruturá-los em formato JSON.
 
 Para cada achado identificado, retorne:
@@ -78,61 +73,13 @@ Para cada achado identificado, retorne:
 - severity: grau ou classificação (se mencionado)
 - raw_description: descrição bruta do achado
 
-IMPORTANTE: Reconheça variações de linguagem natural:
-- "tireoide aumentada" = "tireoide de dimensões aumentadas" = "tireoide com aumento"
-- "ecotextura heterogênea" = "textura heterogênea" = "heterogênea"
-- "nódulo" = "formação nodular" = "lesão nodular"
+IMPORTANTE: reconheça variações de linguagem natural e normalize termos.
 
 Modalidade atual: ${modality}
-${currentSection ? `Seção atual: ${currentSection}` : ''}
-
-Exemplos:
-Input: "Tireoide de dimensões aumentadas"
-Output: {
-  "findings": [
-    {
-      "organ": "tireoide",
-      "finding": "aumentada",
-      "severity": null,
-      "raw_description": "tireoide de dimensões aumentadas"
-    }
-  ]
-}
-
-Input: "Fígado aumentado, esteatose grau 2"
-Output: {
-  "findings": [
-    {
-      "organ": "fígado",
-      "finding": "aumentada",
-      "severity": null,
-      "raw_description": "fígado aumentado"
-    },
-    {
-      "organ": "fígado",
-      "finding": "esteatose",
-      "severity": "grau 2",
-      "raw_description": "esteatose grau 2"
-    }
-  ]
-}
-
-Input: "Nódulo sólido no lobo esquerdo medindo 1.2cm"
-Output: {
-  "findings": [
-    {
-      "organ": "tireoide",
-      "finding": "nódulo",
-      "severity": "1.2cm",
-      "raw_description": "nódulo sólido no lobo esquerdo medindo 1.2cm"
-    }
-  ]
-}
-
-Retorne SEMPRE no formato: {"findings": [...]}. Não retorne array direto.`
+${currentSection ? `Seção atual: ${currentSection}` : ''}`
 
       const completion = await getOpenAI().chat.completions.create({
-        model: 'gpt-4.1-mini',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: voiceText }
@@ -144,29 +91,25 @@ Retorne SEMPRE no formato: {"findings": [...]}. Não retorne array direto.`
 
       const responseText = completion.choices[0]?.message?.content || '{}'
       const extracted = JSON.parse(responseText)
-      
-      // Processar cada achado extraído
+
       const findings: InterpretedFinding[] = []
       const extractedFindings = Array.isArray(extracted) ? extracted : (extracted.findings || [])
-      
+
       for (const item of extractedFindings) {
-        // Buscar conhecimento correspondente
         const keywords = [item.finding, item.organ].filter(Boolean)
         const knowledge = await this.searchKnowledge(keywords, modality)
-        
+
         if (knowledge.length > 0) {
           const match = knowledge[0]
-          
-          // Construir descrição e impressão
+
           let description = match.description_template
           let impression = match.impression_template
-          
-          // Substituir placeholders
+
           if (item.severity) {
             description = description.replace('{grau}', item.severity)
             impression = impression.replace('{grau}', item.severity)
           }
-          
+
           findings.push({
             organ: item.organ,
             finding: item.finding,
@@ -176,14 +119,13 @@ Retorne SEMPRE no formato: {"findings": [...]}. Não retorne array direto.`
             confidence: 0.9
           })
         } else {
-          // Gerar descrição genérica com IA se não houver conhecimento
           const generatedDescription = await this.generateGenericDescription(
             item.organ,
             item.finding,
             item.severity,
             item.raw_description
           )
-          
+
           findings.push({
             organ: item.organ,
             finding: item.finding,
@@ -194,16 +136,14 @@ Retorne SEMPRE no formato: {"findings": [...]}. Não retorne array direto.`
           })
         }
       }
-      
+
       return findings
-      
     } catch (error) {
       console.error('Erro ao interpretar voz:', error)
       throw new Error('Erro ao processar ditado')
     }
   }
 
-  // Gerar descrição genérica quando não há conhecimento específico
   private static async generateGenericDescription(
     organ: string,
     finding: string,
@@ -211,7 +151,6 @@ Retorne SEMPRE no formato: {"findings": [...]}. Não retorne array direto.`
     rawDescription?: string
   ): Promise<{ description: string; impression: string }> {
     const prompt = `Gere uma descrição radiológica profissional para:
-    
 Órgão: ${organ}
 Achado: ${finding}
 ${severity ? `Grau/Tamanho: ${severity}` : ''}
@@ -221,13 +160,11 @@ Retorne um JSON com:
 {
   "description": "frase completa para a seção ACHADOS do laudo",
   "impression": "frase resumida para a seção IMPRESSÃO DIAGNÓSTICA"
-}
-
-Use terminologia médica adequada e seja objetivo.`
+}`
 
     try {
       const completion = await getOpenAI().chat.completions.create({
-        model: 'gpt-4.1-mini',
+        model: 'gpt-4o-mini',
         messages: [
           { 
             role: 'system', 
@@ -254,29 +191,20 @@ Use terminologia médica adequada e seja objetivo.`
     }
   }
 
-  // Melhorar texto do laudo completo
   static async enhanceReport(reportText: string, modality: string): Promise<string> {
     try {
       const systemPrompt = `Você é um radiologista sênior revisando um laudo de ${modality}.
 
-Sua tarefa é melhorar o texto do laudo mantendo:
+Melhore o texto mantendo:
 - Toda informação médica original
 - Terminologia técnica adequada
 - Estrutura de seções (TÉCNICA, ACHADOS, IMPRESSÃO)
 - Formatação profissional
 
-Melhore:
-- Fluidez e coerência
-- Concordância e gramática
-- Clareza das descrições
-
-NÃO adicione informações que não estavam no texto original.
-NÃO remova achados importantes.
-
-Retorne apenas o laudo melhorado, sem comentários adicionais.`
+Não adicione informações novas nem remova achados.`
 
       const completion = await getOpenAI().chat.completions.create({
-        model: 'gpt-4.1-mini',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: reportText }
@@ -286,34 +214,25 @@ Retorne apenas o laudo melhorado, sem comentários adicionais.`
       })
 
       return completion.choices[0]?.message?.content || reportText
-      
     } catch (error) {
       console.error('Erro ao melhorar laudo:', error)
       return reportText
     }
   }
 
-  // Gerar impressão diagnóstica automaticamente
   static async generateImpression(findingsText: string): Promise<string[]> {
     try {
       const systemPrompt = `Você é um radiologista gerando a IMPRESSÃO DIAGNÓSTICA de um laudo.
 
-Baseado nos achados fornecidos, gere uma lista de impressões diagnósticas concisas.
-
-Regras:
-- Cada impressão deve começar com hífen (-)
-- Seja objetivo e direto
-- Use terminologia médica adequada
-- Ordene por relevância clínica
-- Se não houver achados, retorne apenas: "- Exame sem alterações significativas."
-
-Retorne um JSON com array de strings:
+Baseado nos achados fornecidos, gere uma lista de impressões diagnósticas concisas em formato JSON:
 {
   "impressions": ["- Impressão 1", "- Impressão 2"]
-}`
+}
+
+Regras: inicie com hífen, seja objetivo e ordene por relevância.`
 
       const completion = await getOpenAI().chat.completions.create({
-        model: 'gpt-4.1-mini',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: findingsText }
@@ -325,9 +244,8 @@ Retorne um JSON com array de strings:
 
       const result = JSON.parse(completion.choices[0]?.message?.content || '{}')
       return result.impressions || ['- Exame sem alterações significativas.']
-      
     } catch (error) {
-      console.error('Erro ao gerar impressão:', error)
+      console.error('Erro ao gerar impressão diagnóstica:', error)
       return ['- Erro ao gerar impressão diagnóstica.']
     }
   }

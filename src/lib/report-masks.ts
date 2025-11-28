@@ -5,6 +5,7 @@ export interface ReportMaskSection {
   title: string
   order: number
   required: boolean
+  type?: string
 }
 
 export interface ReportMask {
@@ -12,6 +13,7 @@ export interface ReportMask {
   name: string
   modality: string
   exam_type: string
+  exam_name?: string
   sections: ReportMaskSection[] | { sections: ReportMaskSection[] }
   default_texts?: Record<string, string>
   default_text?: Record<string, string>

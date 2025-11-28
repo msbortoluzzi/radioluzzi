@@ -1,15 +1,28 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { ReportMaskService, type ReportMask } from '@/lib/report-masks'
-import { QuickPhrasesService, type QuickPhrase } from '@/lib/quick-phrases'
+import {
+  QuickPhrasesService,
+  type QuickPhrase as ServiceQuickPhrase
+} from '@/lib/quick-phrases'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import { EditorSectionManager } from '@/lib/editor-section-manager'
 import DictationArea from '@/components/DictationArea'
-import QuickPhrasesPanel from '@/components/QuickPhrasesPanel'
+import QuickPhrasesPanel, {
+  type QuickPhrase as PanelQuickPhrase
+} from '@/components/QuickPhrasesPanel'
 
-// Importar editor dinamicamente
+type AIInterpretFinding = {
+  description: string
+  impression?: string | null
+}
+
+type AIInterpretResponse = {
+  findings?: AIInterpretFinding[]
+}
+
 const ReportEditor = dynamic(() => import('@/components/ReportEditor'), {
   ssr: false,
   loading: () => (
@@ -23,7 +36,6 @@ const ReportEditor = dynamic(() => import('@/components/ReportEditor'), {
 })
 
 const EditorLaudosPage: React.FC = () => {
-  // Estados principais
   const [masks, setMasks] = useState<ReportMask[]>([])
   const [selectedMask, setSelectedMask] = useState<ReportMask | null>(null)
   const [modalities, setModalities] = useState<string[]>([])
@@ -31,35 +43,24 @@ const EditorLaudosPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Estados do editor
   const [editorContent, setEditorContent] = useState('')
-  
-  // Estados da área de ditação
   const [dictationText, setDictationText] = useState('')
   const [isProcessingAI, setIsProcessingAI] = useState(false)
-  
-  // Estados de frases prontas
-  const [quickPhrases, setQuickPhrases] = useState<QuickPhrase[]>([])
-  
-  // Reconhecimento de voz
-  const {
-    isListening,
-    startListening,
-    stopListening
-  } = useSpeechRecognition({
+  const [quickPhrases, setQuickPhrases] = useState<PanelQuickPhrase[]>([])
+
+  const { isListening, startListening, stopListening } = useSpeechRecognition({
     lang: 'pt-BR',
     continuous: true,
     interimResults: true,
     onResult: (text, isFinal) => {
       if (isFinal && text.trim()) {
-        setDictationText(prev => (prev + ' ' + text).trim())
+        setDictationText((prev) => (prev + ' ' + text).trim())
       }
     }
   })
 
-  // Carregar dados iniciais
   useEffect(() => {
-    loadInitialData()
+    void loadInitialData()
   }, [])
 
   const loadInitialData = async () => {
@@ -70,11 +71,11 @@ const EditorLaudosPage: React.FC = () => {
         ReportMaskService.getAvailableModalities(),
         QuickPhrasesService.getAllPhrases()
       ])
-      
+
       setMasks(allMasks)
       setModalities(availableModalities)
-      setQuickPhrases(phrases)
-      
+      setQuickPhrases(phrases as unknown as PanelQuickPhrase[])
+
       if (availableModalities.length > 0) {
         setSelectedModality(availableModalities[0])
       }
@@ -86,59 +87,83 @@ const EditorLaudosPage: React.FC = () => {
     }
   }
 
-  // Filtrar máscaras por modalidade
-  const filteredMasks = masks.filter(mask => 
-    !selectedModality || mask.modality === selectedModality
+  const filteredMasks = masks.filter(
+    (mask) => !selectedModality || mask.modality === selectedModality
   )
 
-  // Selecionar máscara e carregar template
   const handleSelectMask = useCallback((mask: ReportMask) => {
     setSelectedMask(mask)
-    
-    const sections = Array.isArray(mask.sections) ? mask.sections : (mask.sections?.sections || [])
+
+    const sections = Array.isArray(mask.sections) ? mask.sections : mask.sections?.sections || []
     const defaultText = mask.default_texts || mask.default_text || {}
-    
-    // Gerar conteúdo com formatação Arial 11
-    let initialContent = `<div style="font-family: Arial, sans-serif; font-size: 11pt;">`
-    
-    // Título: Negrito, Caixa Alta, Centralizado, Arial 11
-    initialContent += `<p style="text-align: center; font-weight: bold; font-size: 11pt; margin-bottom: 12pt;">${mask.name.toUpperCase()}</p>`
-    
+
+    const cleanedSections: string[] = []
+    const impressionLines: string[] = []
+
     sections
       .sort((a, b) => a.order - b.order)
-      .forEach(section => {
-        if (section.type === 'title') return
-        
-        // Seção: Negrito, Caixa Alta, Arial 11
-        const isImpressao = section.title.toUpperCase().includes('IMPRESS')
-        initialContent += `<p style="font-weight: bold; font-size: 11pt; margin-top: 12pt; margin-bottom: 6pt;">${section.title.toUpperCase()}</p>`
-        
-        const sectionContent = defaultText[section.id] || ''
-        if (sectionContent) {
-          const formattedContent = sectionContent.replace(/\\n/g, '<br>').replace(/\n/g, '<br>')
-          initialContent += `<p style="font-size: 11pt; margin-bottom: 6pt;">${formattedContent}</p>`
+      .forEach((section) => {
+        const raw = (defaultText[section.id] || '').replace(/\\n/g, '\n')
+        const lines = raw
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .filter((l) => !l.toLowerCase().includes('clique aqui'))
+          .filter((l) => l.toUpperCase() !== mask.name.toUpperCase())
+          .filter((l) => l.toUpperCase() !== section.title.toUpperCase())
+
+        if (section.title.toLowerCase().includes('impress')) {
+          impressionLines.push(...lines)
         } else {
-          initialContent += `<p style="font-size: 11pt; margin-bottom: 6pt; color: #999;"><em>Clique aqui ou dite para preencher...</em></p>`
+          cleanedSections.push(...lines)
         }
       })
-    
+
+    let initialContent =
+      '<div style="font-family: Arial, sans-serif; font-size: 11pt; color: #e5e7eb; line-height: 1.6;">'
+    initialContent += `<p style="text-align: center; font-weight: bold; font-size: 11pt; margin-bottom: 18pt;">ULTRASSONOGRAFIA DE TIREOIDE</p>`
+    initialContent += `<p style="font-style: italic; margin-bottom: 16pt;">Indicação clínica:</p>`
+    initialContent += `<p style="height: 8px; margin: 0 0 16pt 0;">&nbsp;</p>`
+    initialContent += `<p style="font-weight: bold; font-size: 11pt; margin-bottom: 12pt;">RELATÓRIO:</p>`
+    cleanedSections.forEach((line) => {
+      initialContent += `<p style="font-size: 11pt; margin: 4px 0 10px 0;">${line}</p>`
+    })
+    initialContent += `<p style="height: 12px; margin: 0 0 12pt 0;">&nbsp;</p>`
+
+    initialContent += `<p style="font-weight: bold; font-size: 11pt; margin-top: 18pt; margin-bottom: 10pt;">IMPRESSÃO:</p>`
+    const finalImpression = impressionLines.length
+      ? impressionLines
+      : ['Exame sem alterações significativas.']
+    finalImpression.forEach((line) => {
+      initialContent += `<p style="font-size: 11pt; margin: 4px 0 8px 0;">${line}</p>`
+    })
+    initialContent += `<p style="height: 8px; margin: 0 0 8pt 0;">&nbsp;</p>`
+
     initialContent += '</div>'
-    
+
     setEditorContent(initialContent)
-    loadQuickPhrasesForExam(mask.modality, mask.exam_type)
+    void loadQuickPhrasesForExam(mask.modality, mask.exam_type, mask.id)
   }, [])
 
-  const loadQuickPhrasesForExam = async (modality: string, examType: string) => {
-    const phrases = await QuickPhrasesService.getPhrasesByExam(modality, examType)
-    setQuickPhrases(phrases)
+  const loadQuickPhrasesForExam = async (modality: string, examType: string, maskId?: string) => {
+    const phrases = await QuickPhrasesService.getPhrasesByExam(modality, examType, maskId)
+    setQuickPhrases(phrases as unknown as PanelQuickPhrase[])
   }
+
+  const selectedSections = useMemo(() => {
+    if (!selectedMask) return []
+    const sections = Array.isArray(selectedMask.sections)
+      ? selectedMask.sections
+      : selectedMask.sections?.sections || []
+    return sections.map((s) => ({ id: s.id, title: s.title }))
+  }, [selectedMask])
 
   const handleProcessWithAI = useCallback(async () => {
     if (!selectedMask || !dictationText.trim()) return
-    
+
     try {
       setIsProcessingAI(true)
-      
+
       const response = await fetch('/api/ai/interpret', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -147,36 +172,62 @@ const EditorLaudosPage: React.FC = () => {
           modality: selectedMask.modality
         })
       })
-      
+
       if (!response.ok) {
         throw new Error('Erro ao processar com IA')
       }
-      
-      const { findings } = await response.json()
-      
+
+      const data = (await response.json()) as AIInterpretResponse
+      const findings = Array.isArray(data.findings) ? data.findings : []
+
       if (findings.length === 0) {
         alert('IA não conseguiu interpretar os achados.')
         return
       }
-      
-      let formattedText = ''
-      findings.forEach(finding => {
-        formattedText += `${finding.description}\n\n`
+
+      const normalize = (text: string) =>
+        text
+          .replace(/\{[^}]+\}/g, '')
+          .replace(/_+/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+
+      const paragraphs: string[] = []
+
+      findings.forEach((finding) => {
+        const cleaned = normalize(finding.description)
+        if (cleaned) paragraphs.push(cleaned)
       })
-      
-      if (findings.some(f => f.impression)) {
-        formattedText += 'IMPRESSÃO:\n'
-        findings.forEach(finding => {
-          if (finding.impression) {
-            formattedText += `- ${finding.impression}\n`
-          }
-        })
+
+      const impressions = findings
+        .map((f) => f.impression)
+        .filter((i): i is string => !!i)
+        .map((imp) => normalize(imp))
+        .filter(Boolean)
+        .map((imp) => `- ${imp}`)
+
+      if (impressions.length) {
+        paragraphs.push('IMPRESSÃO:')
+        paragraphs.push(...impressions)
       }
-      
-      setDictationText(formattedText.trim())
-      
-    } catch (error) {
-      console.error('Erro ao processar com IA:', error)
+
+      const seen = new Set<string>()
+      const unique = paragraphs.filter((p) => {
+        const key = p.toLowerCase()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+
+      const plain = unique.join('\n\n').trim()
+      const html = `<div style="font-family: Arial, sans-serif; font-size: 11pt; color: #e5e7eb; line-height: 1.6;">${unique
+        .map((p) => `<p style="margin: 6px 0;">${p}</p>`)
+        .join('')}</div>`
+
+      setDictationText(plain)
+      setEditorContent((prev) => `${prev}<br/>${html}`)
+    } catch (err) {
+      console.error('Erro ao processar com IA:', err)
       alert('Erro ao processar com IA.')
     } finally {
       setIsProcessingAI(false)
@@ -185,17 +236,17 @@ const EditorLaudosPage: React.FC = () => {
 
   const handleAddToReport = useCallback(() => {
     if (!selectedMask || !dictationText.trim()) return
-    
-    const sections = Array.isArray(selectedMask.sections) 
-      ? selectedMask.sections 
-      : (selectedMask.sections?.sections || [])
-    
-    const sectionIds = sections.map(s => s.id)
+
+    const sections = Array.isArray(selectedMask.sections)
+      ? selectedMask.sections
+      : selectedMask.sections?.sections || []
+
+    const sectionIds = sections.map((s) => s.id)
     const sectionTitles: Record<string, string> = {}
-    sections.forEach(s => {
+    sections.forEach((s) => {
       sectionTitles[s.id] = s.title
     })
-    
+
     const updatedContent = EditorSectionManager.processVoiceInput(
       editorContent,
       dictationText,
@@ -203,21 +254,21 @@ const EditorLaudosPage: React.FC = () => {
       sectionIds,
       sectionTitles
     )
-    
+
     setEditorContent(updatedContent)
     setDictationText('')
   }, [selectedMask, dictationText, editorContent])
 
-  const handleSelectQuickPhrase = useCallback((phrase: QuickPhrase) => {
-    setDictationText(prev => (prev + ' ' + phrase.text).trim())
-    QuickPhrasesService.incrementUsage(phrase.id)
+  const handleSelectQuickPhrase = useCallback((phrase: PanelQuickPhrase) => {
+    setDictationText((prev) => (prev + ' ' + phrase.text).trim())
+    void QuickPhrasesService.incrementUsage(phrase.id)
   }, [])
 
   const handleCopyReport = useCallback(() => {
     const tempDiv = document.createElement('div')
     tempDiv.innerHTML = editorContent
     const plainText = tempDiv.innerText || tempDiv.textContent || ''
-    
+
     navigator.clipboard.writeText(plainText).then(() => {
       alert('Laudo copiado!')
     })
@@ -237,40 +288,33 @@ const EditorLaudosPage: React.FC = () => {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-100 mb-2">
-            Editor Inteligente de Laudos
-          </h1>
-          <p className="text-gray-400">Selecione uma máscara e comece a ditar ou digitar seu laudo</p>
+        <div className="mb-6 text-center">
+          <p className="text-gray-400 italic text-lg">“No limiar, é só você, o laudo e a linha perfeita.”</p>
+          {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* Máscaras */}
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-4 space-y-4">
             <div className="bg-[#111111] rounded-lg border border-[#222222] p-4">
-              <h2 className="text-lg font-semibold mb-4 text-gray-100">Máscaras</h2>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-gray-100">Modalidade</label>
-                <div className="flex flex-col gap-2">
-                  {modalities.map(modality => (
-                    <button
-                      key={modality}
-                      onClick={() => setSelectedModality(modality)}
-                      className={`px-3 py-2 rounded-md text-sm ${
-                        selectedModality === modality
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-[#1a1a1a] text-gray-100 hover:bg-[#222222]'
-                      }`}
-                    >
-                      {modality}
-                    </button>
-                  ))}
-                </div>
+              <h3 className="text-lg font-semibold mb-3">Modalidades</h3>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {modalities.map((mod) => (
+                  <button
+                    key={mod}
+                    onClick={() => setSelectedModality(mod)}
+                    className={`px-3 py-1 rounded-md text-sm ${
+                      selectedModality === mod
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-[#0f0f0f] text-gray-100 border border-[#222222] hover:bg-[#1a1a1a]'
+                    }`}
+                  >
+                    {mod}
+                  </button>
+                ))}
               </div>
 
               <div className="space-y-2">
-                {filteredMasks.map(mask => (
+                {filteredMasks.map((mask) => (
                   <button
                     key={mask.id}
                     onClick={() => handleSelectMask(mask)}
@@ -285,10 +329,24 @@ const EditorLaudosPage: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            <div className="sticky top-4">
+              {selectedMask ? (
+                <QuickPhrasesPanel
+                  phrases={quickPhrases}
+                  onSelectPhrase={handleSelectQuickPhrase}
+                  disabled={!selectedMask}
+                  sections={selectedSections}
+                />
+              ) : (
+                <div className="bg-[#111111] rounded-lg border border-[#222222] p-4 text-sm text-gray-400">
+                  Selecione um exame para ver as frases prontas.
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Ditação + Laudo */}
-          <div className="lg:col-span-7 space-y-4">
+          <div className="lg:col-span-8 space-y-4">
             <DictationArea
               text={dictationText}
               isListening={isListening}
@@ -315,27 +373,12 @@ const EditorLaudosPage: React.FC = () => {
               </div>
 
               {selectedMask ? (
-                <ReportEditor
-                  content={editorContent}
-                  onChange={setEditorContent}
-                  editable={true}
-                />
+                <ReportEditor content={editorContent} onChange={setEditorContent} editable={true} />
               ) : (
                 <div className="border border-[#222222] rounded-lg bg-[#0f0f0f] p-12 text-center">
                   <p className="text-gray-400">Selecione uma máscara</p>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Frases Prontas */}
-          <div className="lg:col-span-3">
-            <div className="sticky top-4">
-              <QuickPhrasesPanel
-                phrases={quickPhrases}
-                onSelectPhrase={handleSelectQuickPhrase}
-                disabled={!selectedMask}
-              />
             </div>
           </div>
         </div>

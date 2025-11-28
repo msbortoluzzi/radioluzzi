@@ -49,7 +49,7 @@ const ReportEditor: React.FC<ReportEditorProps> = ({
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none min-h-[500px] max-w-none p-6'
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none min-h-[500px] max-w-none p-6 bg-[#0f0f0f] text-gray-100 prose-invert'
       }
     }
   })
@@ -64,147 +64,120 @@ const ReportEditor: React.FC<ReportEditorProps> = ({
     return null
   }
 
+  const baseBtn = 'px-3 py-1 rounded text-sm bg-[#0f0f0f] text-gray-200 hover:bg-[#1f1f1f]'
+
   return (
-    <div className="border border-gray-300 rounded-lg bg-white">
-      {/* Barra de Ferramentas */}
-      <div className="border-b border-gray-200 p-2 flex flex-wrap gap-2 bg-gray-50">
-        {/* Formatação de Texto */}
+    <div className="border border-[#222222] rounded-lg bg-[#0f0f0f] text-gray-100">
+      <div className="border-b border-[#222222] p-2 flex flex-wrap gap-2 bg-[#161616]">
         <div className="flex gap-1">
           <button
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`px-3 py-1 rounded text-sm font-semibold ${
-              editor.isActive('bold') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} font-semibold ${editor.isActive('bold') ? 'bg-blue-600 text-white' : ''}`}
             title="Negrito (Ctrl+B)"
           >
             B
           </button>
           <button
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`px-3 py-1 rounded text-sm italic ${
-              editor.isActive('italic') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} italic ${editor.isActive('italic') ? 'bg-blue-600 text-white' : ''}`}
             title="Itálico (Ctrl+I)"
           >
             I
           </button>
           <button
             onClick={() => editor.chain().focus().toggleUnderline().run()}
-            className={`px-3 py-1 rounded text-sm underline ${
-              editor.isActive('underline') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} underline ${editor.isActive('underline') ? 'bg-blue-600 text-white' : ''}`}
             title="Sublinhado (Ctrl+U)"
           >
             U
           </button>
         </div>
 
-        {/* Títulos */}
-        <div className="flex gap-1 border-l pl-2">
+        <div className="flex gap-1 border-l border-[#222222] pl-2">
           <button
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            className={`px-3 py-1 rounded text-sm ${
-              editor.isActive('heading', { level: 1 }) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} ${editor.isActive('heading', { level: 1 }) ? 'bg-blue-600 text-white' : ''}`}
             title="Título 1"
           >
             H1
           </button>
           <button
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={`px-3 py-1 rounded text-sm ${
-              editor.isActive('heading', { level: 2 }) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-600 text-white' : ''}`}
             title="Título 2"
           >
             H2
           </button>
           <button
             onClick={() => editor.chain().focus().setParagraph().run()}
-            className={`px-3 py-1 rounded text-sm ${
-              editor.isActive('paragraph') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} ${editor.isActive('paragraph') ? 'bg-blue-600 text-white' : ''}`}
             title="Parágrafo"
           >
             P
           </button>
         </div>
 
-        {/* Listas */}
-        <div className="flex gap-1 border-l pl-2">
+        <div className="flex gap-1 border-l border-[#222222] pl-2">
           <button
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`px-3 py-1 rounded text-sm ${
-              editor.isActive('bulletList') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} ${editor.isActive('bulletList') ? 'bg-blue-600 text-white' : ''}`}
             title="Lista com marcadores"
           >
             • Lista
           </button>
           <button
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`px-3 py-1 rounded text-sm ${
-              editor.isActive('orderedList') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} ${editor.isActive('orderedList') ? 'bg-blue-600 text-white' : ''}`}
             title="Lista numerada"
           >
             1. Lista
           </button>
         </div>
 
-        {/* Alinhamento */}
-        <div className="flex gap-1 border-l pl-2">
+        <div className="flex gap-1 border-l border-[#222222] pl-2">
           <button
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={`px-3 py-1 rounded text-sm ${
-              editor.isActive({ textAlign: 'left' }) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} ${editor.isActive({ textAlign: 'left' }) ? 'bg-blue-600 text-white' : ''}`}
             title="Alinhar à esquerda"
           >
-            ⬅
+            ←
           </button>
           <button
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={`px-3 py-1 rounded text-sm ${
-              editor.isActive({ textAlign: 'center' }) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} ${editor.isActive({ textAlign: 'center' }) ? 'bg-blue-600 text-white' : ''}`}
             title="Centralizar"
           >
             ↔
           </button>
           <button
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={`px-3 py-1 rounded text-sm ${
-              editor.isActive({ textAlign: 'right' }) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
+            className={`${baseBtn} ${editor.isActive({ textAlign: 'right' }) ? 'bg-blue-600 text-white' : ''}`}
             title="Alinhar à direita"
           >
-            ➡
+            →
           </button>
         </div>
 
-        {/* Ações */}
-        <div className="flex gap-1 border-l pl-2 ml-auto">
+        <div className="flex gap-1 border-l border-[#222222] pl-2 ml-auto">
           <button
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
-            className="px-3 py-1 rounded text-sm bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`${baseBtn} disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Desfazer (Ctrl+Z)"
           >
-            ↶ Desfazer
+            ↺ Desfazer
           </button>
           <button
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
-            className="px-3 py-1 rounded text-sm bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`${baseBtn} disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Refazer (Ctrl+Y)"
           >
-            ↷ Refazer
+            ↻ Refazer
           </button>
         </div>
       </div>
 
-      {/* Área do Editor */}
       <EditorContent editor={editor} />
     </div>
   )
