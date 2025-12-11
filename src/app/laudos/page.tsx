@@ -293,6 +293,53 @@ const EditorLaudosPage: React.FC = () => {
     setShowPhraseManager(false)
   }, [selectedMask, formText, formLabel, formLine, formSection, selectedSections, editingPhrase])
 
+  const handleProcessDictationWithAI = useCallback(async () => {
+    if (!dictationText.trim()) return
+    setIsProcessingAI(true)
+    try {
+      const res = await fetch('/api/ai/interpret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: dictationText,
+          modality: selectedMask?.modality || selectedModality || 'geral'
+        })
+      })
+
+      if (!res.ok) {
+        throw new Error('Falha ao processar texto com IA')
+      }
+
+      const data = (await res.json()) as { findings?: { description?: string; impression?: string }[] }
+      const assembled =
+        data.findings
+          ?.map((f) => f.description || f.impression || '')
+          .filter((t) => t && t.trim().length > 0)
+          .join('\n') || ''
+
+      if (assembled) {
+        setDictationText(assembled)
+      }
+    } catch (err) {
+      console.error('Erro no Radioluzzi+:', err)
+    } finally {
+      setIsProcessingAI(false)
+    }
+  }, [dictationText, selectedMask, selectedModality])
+
+  const handleAddDictationToReport = useCallback(() => {
+    if (!dictationText.trim()) return
+    const lines = dictationText
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0)
+      .map((l) => `<p data-section="relatorio">${l}</p>`)
+      .join('')
+
+    setEditorContent((prev) => prev + lines)
+    setDictationText('')
+  }, [dictationText])
+
   const handleCopyReport = useCallback(() => {
     const tempDiv = document.createElement('div')
     tempDiv.innerHTML = editorContent
@@ -461,8 +508,8 @@ const EditorLaudosPage: React.FC = () => {
                 onTextChange={setDictationText}
                 onStartListening={startListening}
                 onStopListening={stopListening}
-                onProcessWithAI={() => {}}
-                onAddToReport={() => {}}
+                onProcessWithAI={handleProcessDictationWithAI}
+                onAddToReport={handleAddDictationToReport}
                 onClear={() => setDictationText('')}
                 disabled={!selectedMask}
               />
