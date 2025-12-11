@@ -43,22 +43,85 @@ export class EditorSectionManager {
   }
   
   /**
-   * Substitui o conteúdo de uma seção específica no HTML do editor
+   * Substitui o conteúdo de uma seção específica no HTML do editor.
+   * Suporta busca por data-section e, como fallback, por headers H1/H2.
    */
   static replaceSectionContent(
     currentHtml: string,
     sectionId: string,
     newContent: string,
-    sectionTitles: Record<string, string>
+    sectionTitles: Record<string, string>,
+    lineIndex?: number
   ): string {
     const sectionTitle = sectionTitles[sectionId]
-    if (!sectionTitle) return currentHtml
     
-    // Criar um elemento temporário para manipular o DOM
+    // Criar DOM temporário
     const tempDiv = document.createElement('div')
     tempDiv.innerHTML = currentHtml
     
-    // Encontrar o <h2> com o título da seção
+    // 1) Procurar por data-section e garantir quantidade mínima de linhas quando lineIndex for informado
+    const replaceParagraphContent = (target: HTMLElement | null) => {
+      if (!target) return
+      const html = newContent.trim()
+      if (html.startsWith('<p')) {
+        const temp = document.createElement('div')
+        temp.innerHTML = html
+        const child = temp.querySelector('p')
+        if (child) {
+          target.innerHTML = child.innerHTML
+        } else {
+          target.innerHTML = html
+        }
+      } else {
+        target.textContent = html
+      }
+    }
+
+    if (lineIndex !== undefined) {
+      const existing = Array.from(
+        tempDiv.querySelectorAll<HTMLElement>(`[data-section="${sectionId}"]`)
+      )
+
+      if (existing.length < lineIndex) {
+        const missing = lineIndex - existing.length
+        const frag = document.createDocumentFragment()
+        for (let i = 0; i < missing; i++) {
+          const p = document.createElement('p')
+          p.setAttribute('data-section', sectionId)
+          p.innerHTML = '&nbsp;'
+          frag.appendChild(p)
+        }
+
+        const anchor = existing[existing.length - 1]
+        if (anchor && anchor.parentElement) {
+          anchor.parentElement.insertBefore(frag, anchor.nextSibling)
+        } else {
+          tempDiv.appendChild(frag)
+        }
+      }
+
+      const updatedList = Array.from(
+        tempDiv.querySelectorAll<HTMLElement>(`[data-section="${sectionId}"]`)
+      )
+      const target = updatedList[lineIndex - 1] || null
+      replaceParagraphContent(target)
+      return tempDiv.innerHTML
+    }
+
+    const targetByData = tempDiv.querySelector(
+      `[data-section="${sectionId}"]`
+    ) as HTMLElement | null
+    if (targetByData) {
+      replaceParagraphContent(targetByData)
+      return tempDiv.innerHTML
+    }
+    
+    // 2) Fallback: procurar header
+    if (!sectionTitle) {
+      tempDiv.innerHTML += `<p data-section="${sectionId}">${newContent}</p>`
+      return tempDiv.innerHTML
+    }
+    
     const headers = tempDiv.querySelectorAll('h2')
     let targetHeader: HTMLElement | null = null
     
@@ -71,8 +134,7 @@ export class EditorSectionManager {
     }
     
     if (!targetHeader) {
-      // Seção não encontrada, adiciona no final
-      tempDiv.innerHTML += `<br>${newContent}`
+      tempDiv.innerHTML += `<p data-section="${sectionId}">${newContent}</p>`
       return tempDiv.innerHTML
     }
     
@@ -88,7 +150,7 @@ export class EditorSectionManager {
       currentElement = currentElement.nextElementSibling
     }
     
-    // Remover todo o conteúdo entre o header atual e o próximo
+    // Remover conteúdo entre headers
     currentElement = targetHeader.nextElementSibling
     const elementsToRemove: Element[] = []
     
@@ -101,7 +163,7 @@ export class EditorSectionManager {
     
     // Inserir novo conteúdo após o header
     const newContentDiv = document.createElement('div')
-    newContentDiv.innerHTML = newContent + '<br>'
+    newContentDiv.innerHTML = `<p data-section="${sectionId}">${newContent}</p><br>`
     
     if (nextHeader) {
       nextHeader.before(...Array.from(newContentDiv.childNodes))

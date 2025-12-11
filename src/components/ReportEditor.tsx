@@ -1,13 +1,14 @@
 'use client'
 
 import React from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import FontFamily from '@tiptap/extension-font-family'
 import TextAlign from '@tiptap/extension-text-align'
+import Paragraph from '@tiptap/extension-paragraph'
 
 interface ReportEditorProps {
   content: string
@@ -16,20 +17,83 @@ interface ReportEditorProps {
   editable?: boolean
 }
 
+const ParagraphWithMeta = Paragraph.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      'data-section': {
+        default: null,
+        parseHTML: (element) => element.getAttribute('data-section'),
+        renderHTML: (attributes) =>
+          attributes['data-section'] ? { 'data-section': attributes['data-section'] } : {}
+      },
+      'data-line': {
+        default: null,
+        parseHTML: (element) => element.getAttribute('data-line'),
+        renderHTML: (attributes) =>
+          attributes['data-line'] ? { 'data-line': attributes['data-line'] } : {}
+      }
+    }
+  }
+})
+
+const applyLineNumbersToElements = (elements: NodeListOf<HTMLElement>) => {
+  const counters = new Map<string, number>()
+  let currentSection: string | null = null
+
+  elements.forEach((node) => {
+    const sectionAttr = node.getAttribute('data-section')
+
+    if (sectionAttr) {
+      currentSection = sectionAttr
+    } else if (currentSection) {
+      node.setAttribute('data-section', currentSection)
+    } else {
+      currentSection = 'geral'
+      node.setAttribute('data-section', currentSection)
+    }
+
+    const sectionKey = node.getAttribute('data-section') || 'geral'
+    const nextLine = (counters.get(sectionKey) ?? 0) + 1
+    counters.set(sectionKey, nextLine)
+    node.setAttribute('data-line', String(nextLine))
+  })
+}
+
+const addLineNumbersToHtml = (html: string) => {
+  if (typeof window === 'undefined') return html
+  const temp = document.createElement('div')
+  temp.innerHTML = html
+  applyLineNumbersToElements(temp.querySelectorAll<HTMLElement>('p, h1, h2, h3, h4'))
+  return temp.innerHTML
+}
+
 const ReportEditor: React.FC<ReportEditorProps> = ({
   content,
   onChange,
   placeholder = 'Digite ou dite o laudo aqui...',
   editable = true
 }) => {
+  const lastEmittedHtml = React.useRef<string>('')
+
+  const refreshDomLineNumbers = React.useCallback(
+    (editorInstance: Editor | null) => {
+      if (!editorInstance) return
+      applyLineNumbersToElements(editorInstance.view.dom.querySelectorAll<HTMLElement>('p, h1, h2, h3, h4'))
+    },
+    []
+  )
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
+        paragraph: false,
         heading: {
           levels: [1, 2, 3]
         }
       }),
+      ParagraphWithMeta,
       Placeholder.configure({
         placeholder
       }),
@@ -45,7 +109,18 @@ const ReportEditor: React.FC<ReportEditorProps> = ({
     content,
     editable,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML())
+      refreshDomLineNumbers(editor)
+      const numberedHtml = addLineNumbersToHtml(editor.getHTML())
+      if (numberedHtml !== lastEmittedHtml.current) {
+        lastEmittedHtml.current = numberedHtml
+        onChange(numberedHtml)
+      }
+    },
+    onCreate: ({ editor }) => {
+      refreshDomLineNumbers(editor)
+      const numberedHtml = addLineNumbersToHtml(editor.getHTML())
+      lastEmittedHtml.current = numberedHtml
+      onChange(numberedHtml)
     },
     editorProps: {
       attributes: {
@@ -56,9 +131,13 @@ const ReportEditor: React.FC<ReportEditorProps> = ({
 
   React.useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content)
+      if (content !== lastEmittedHtml.current) {
+        editor.commands.setContent(content)
+        lastEmittedHtml.current = addLineNumbersToHtml(content)
+      }
+      refreshDomLineNumbers(editor)
     }
-  }, [content, editor])
+  }, [content, editor, refreshDomLineNumbers])
 
   if (!editor) {
     return null

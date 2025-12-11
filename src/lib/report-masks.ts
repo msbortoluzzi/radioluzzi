@@ -6,6 +6,7 @@ export interface ReportMaskSection {
   order: number
   required: boolean
   type?: string
+  content?: string
 }
 
 export interface ReportMask {
@@ -14,6 +15,10 @@ export interface ReportMask {
   modality: string
   exam_type: string
   exam_name?: string
+  slug?: string
+  show_indicacao?: boolean
+  show_impressao?: boolean
+  show_relatorio?: boolean
   sections: ReportMaskSection[] | { sections: ReportMaskSection[] }
   default_texts?: Record<string, string>
   default_text?: Record<string, string>
@@ -29,7 +34,7 @@ export interface ReportMask {
 }
 
 export class ReportMaskService {
-  // Buscar todas as máscaras ativas
+  // Buscar todas as mascaras ativas
   static async getAllMasks(): Promise<ReportMask[]> {
     const { data, error } = await supabase
       .from('report_masks')
@@ -37,12 +42,12 @@ export class ReportMaskService {
       .eq('active', true)
       .order('modality', { ascending: true })
       .order('exam_type', { ascending: true })
-    
+
     if (error) throw error
     return data || []
   }
 
-  // Buscar máscaras por modalidade
+  // Buscar mascaras por modalidade
   static async getMasksByModality(modality: string): Promise<ReportMask[]> {
     const { data, error } = await supabase
       .from('report_masks')
@@ -50,12 +55,12 @@ export class ReportMaskService {
       .eq('modality', modality)
       .eq('active', true)
       .order('exam_type', { ascending: true })
-    
+
     if (error) throw error
     return data || []
   }
 
-  // Buscar máscara por slug
+  // Buscar mascara por slug
   static async getMaskBySlug(slug: string): Promise<ReportMask | null> {
     const { data, error } = await supabase
       .from('report_masks')
@@ -63,23 +68,25 @@ export class ReportMaskService {
       .eq('slug', slug)
       .eq('active', true)
       .single()
-    
+
     if (error) throw error
     return data
   }
 
-  // Listar modalidades disponíveis
+  // Listar modalidades disponiveis (vindo do Supabase)
   static async getAvailableModalities(): Promise<string[]> {
     const { data, error } = await supabase
-      .from('report_masks')
-      .select('modality')
-      .eq('active', true)
-    
+      .from('exam_types')
+      .select('modalidade, ativo')
+
     if (error) throw error
-    
-    // Remover duplicatas
-    const modalities = [...new Set(data?.map(m => m.modality) || [])]
-    return modalities
+
+    const modalities = (data || [])
+      .filter((row: any) => (row?.ativo ?? true) === true)
+      .map((row: any) => row?.modalidade)
+      .filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0)
+
+    return [...new Set(modalities)]
   }
 
   // Salvar laudo gerado
@@ -97,12 +104,12 @@ export class ReportMaskService {
       .insert([reportData])
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
 
-  // Buscar histórico de laudos
+  // Buscar historico de laudos
   static async getReportHistory(limit: number = 10) {
     const { data, error } = await supabase
       .from('editor_reports')
@@ -112,7 +119,7 @@ export class ReportMaskService {
       `)
       .order('created_at', { ascending: false })
       .limit(limit)
-    
+
     if (error) throw error
     return data || []
   }
