@@ -224,8 +224,8 @@ export function MaskManager() {
     setRelatorioLines(
       (relBase || "")
         .split("\n")
-        .map((l) => l)
-        .filter((_, idx) => true) || [""]
+        .map((line: string) => line)
+        .filter((_: string, _idx: number) => true) || [""]
     );
     setDialogOpen(true);
   };
