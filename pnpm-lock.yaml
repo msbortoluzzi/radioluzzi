@@ -29,6 +29,9 @@ importers:
       '@tiptap/extension-font-family':
         specifier: ^3.11.0
         version: 3.11.0(@tiptap/extension-text-style@3.11.0(@tiptap/core@3.11.0(@tiptap/pm@3.11.0)))
+      '@tiptap/extension-paragraph':
+        specifier: ^3.11.0
+        version: 3.11.0(@tiptap/core@3.11.0(@tiptap/pm@3.11.0))
       '@tiptap/extension-placeholder':
         specifier: ^3.11.0
         version: 3.11.0(@tiptap/extensions@3.11.0(@tiptap/core@3.11.0(@tiptap/pm@3.11.0))(@tiptap/pm@3.11.0))
