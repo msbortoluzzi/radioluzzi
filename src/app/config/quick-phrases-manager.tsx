@@ -150,7 +150,7 @@ export function QuickPhrasesManager() {
         title: s.title,
         order: s.order || 0,
       }))
-      .sort((a, b) => a.order - b.order);
+      .sort((a: { order: number }, b: { order: number }) => a.order - b.order);
   };
 
   const sectionOptions: SectionOption[] = useMemo(() => getSectionsFromMask(selectedMask), [selectedMask]);
