@@ -51,7 +51,8 @@ export class EditorSectionManager {
     sectionId: string,
     newContent: string,
     sectionTitles: Record<string, string>,
-    lineIndex?: number
+    lineIndex?: number,
+    insertMode: 'replace' | 'before' | 'after' | 'inline' = 'replace'
   ): string {
     const sectionTitle = sectionTitles[sectionId]
     
@@ -75,6 +76,16 @@ export class EditorSectionManager {
       } else {
         target.textContent = html
       }
+    }
+
+    const createParagraphWithContent = (ref?: HTMLElement | null) => {
+      const p = ref ? (ref.cloneNode(false) as HTMLElement) : document.createElement('p')
+      p.setAttribute('data-section', sectionId)
+      if (ref?.getAttribute('data-line')) {
+        p.setAttribute('data-line', ref.getAttribute('data-line') || '')
+      }
+      replaceParagraphContent(p)
+      return p
     }
 
     if (lineIndex !== undefined) {
@@ -104,7 +115,30 @@ export class EditorSectionManager {
         tempDiv.querySelectorAll<HTMLElement>(`[data-section="${sectionId}"]`)
       )
       const target = updatedList[lineIndex - 1] || null
-      replaceParagraphContent(target)
+
+      if (!target) {
+        const paragraph = createParagraphWithContent()
+        tempDiv.appendChild(paragraph)
+        return tempDiv.innerHTML
+      }
+
+      if (insertMode === 'before') {
+        const paragraph = createParagraphWithContent(target)
+        target.before(paragraph)
+      } else if (insertMode === 'after') {
+        const paragraph = createParagraphWithContent(target)
+        target.after(paragraph)
+      } else if (insertMode === 'inline') {
+        const html = newContent.trim()
+        const temp = document.createElement('div')
+        temp.innerHTML = html
+        const newText = temp.textContent || ''
+        const existing = target.textContent || ''
+        const combined = [existing, newText].filter((t) => t.trim().length > 0).join(' ')
+        target.textContent = combined
+      } else {
+        replaceParagraphContent(target)
+      }
       return tempDiv.innerHTML
     }
 

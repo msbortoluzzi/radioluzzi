@@ -16,6 +16,9 @@ type PhraseRow = {
   label: string;
   text: string;
   keywords: string[];
+  target_type?: "section" | "title" | "impression";
+  insert_mode?: "replace" | "before" | "after";
+  subsection?: string;
   modality?: string;
   exam_type?: string;
   mask_id?: string | null;
@@ -41,6 +44,9 @@ type FormValues = {
   label: string;
   text: string;
   keywords: string;
+  target_type: "section" | "title" | "impression";
+  insert_mode: "replace" | "before" | "after" | "inline";
+  subsection: string;
   modality: string;
   exam_type: string;
   mask_id?: string;
@@ -52,6 +58,9 @@ const defaultForm: FormValues = {
   label: "",
   text: "",
   keywords: "",
+  target_type: "section",
+  insert_mode: "replace",
+  subsection: "",
   modality: "",
   exam_type: "",
   mask_id: "",
@@ -139,18 +148,38 @@ export function QuickPhrasesManager() {
     [masks, form.mask_id, filters.mask]
   );
 
+  const subsectionOptions = useMemo(() => {
+    const values = phrases
+      .map((p) => p.subsection)
+      .filter((s): s is string => !!s && s.trim().length > 0);
+    return Array.from(new Set(values));
+  }, [phrases]);
+
   const getSectionsFromMask = (mask?: MaskRow): SectionOption[] => {
     if (!mask) return [];
     const sectionsArray = Array.isArray(mask.sections)
       ? mask.sections
       : mask.sections?.sections || [];
-    return sectionsArray
+    const mapped = sectionsArray
       .map((s: any) => ({
         id: s.id,
         title: s.title,
         order: s.order || 0,
       }))
       .sort((a: { order: number }, b: { order: number }) => a.order - b.order);
+
+    const extras: SectionOption[] = [
+      { id: "titulo", title: "Título", order: 9996 },
+      { id: "impressao", title: "Impressão", order: 9997 },
+    ];
+
+    extras.forEach((extra) => {
+      if (!mapped.find((s: { id: string }) => s.id === extra.id)) {
+        mapped.push(extra);
+      }
+    });
+
+    return mapped;
   };
 
   const sectionOptions: SectionOption[] = useMemo(() => getSectionsFromMask(selectedMask), [selectedMask]);
@@ -176,6 +205,13 @@ export function QuickPhrasesManager() {
 
   const handleSubmit = () => {
     setFeedback(null);
+    const targetSectionId =
+      form.target_type === "title"
+        ? "titulo"
+        : form.target_type === "impression"
+        ? "impressao"
+        : form.section_id || null;
+
     const payload = {
       category: form.category.trim(),
       label: form.label.trim(),
@@ -184,10 +220,13 @@ export function QuickPhrasesManager() {
         .split(",")
         .map((k) => k.trim())
         .filter((k) => k.length > 0),
+      target_type: form.target_type || "section",
+      insert_mode: form.insert_mode || "replace",
+      subsection: form.subsection.trim() || null,
       modality: form.modality || null,
       exam_type: form.exam_type || form.modality || null,
       mask_id: form.mask_id || null,
-      section_id: form.section_id || null,
+      section_id: targetSectionId,
     };
 
     startSaving(() => {
@@ -219,16 +258,22 @@ export function QuickPhrasesManager() {
   };
 
   const handleEdit = (row: PhraseRow) => {
+    const derivedTarget =
+      row.target_type ||
+      (row.section_id === "titulo" ? "title" : row.section_id === "impressao" ? "impression" : "section");
     setForm({
       id: row.id,
       category: row.category || "",
       label: row.label || "",
       text: row.text || "",
       keywords: Array.isArray(row.keywords) ? row.keywords.join(", ") : "",
+      target_type: derivedTarget,
+      insert_mode: row.insert_mode || "replace",
+      subsection: row.subsection || "",
       modality: row.modality || "",
       exam_type: row.exam_type || row.modality || "",
       mask_id: row.mask_id || "",
-      section_id: row.section_id || "",
+      section_id: derivedTarget === "section" ? row.section_id || "" : "",
     });
     setDialogOpen(true);
   };
@@ -347,6 +392,7 @@ export function QuickPhrasesManager() {
                 <TableHead>Modalidade</TableHead>
                 <TableHead>Máscara</TableHead>
                 <TableHead>Seção</TableHead>
+                <TableHead>Alvo</TableHead>
                 <TableHead>Uso</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -354,7 +400,7 @@ export function QuickPhrasesManager() {
             <TableBody>
               {filteredPhrases.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-gray-400 py-6">
+                  <TableCell colSpan={8} className="text-center text-gray-400 py-6">
                     Nenhuma frase encontrada.
                   </TableCell>
                 </TableRow>
@@ -366,6 +412,25 @@ export function QuickPhrasesManager() {
                     getSectionsFromMask(maskFound).find((s) => s.id === row.section_id)?.title ||
                     row.section_id ||
                     "";
+                  const effectiveTarget =
+                    row.target_type ||
+                    (row.section_id === "titulo"
+                      ? "title"
+                      : row.section_id === "impressao"
+                      ? "impression"
+                      : "section");
+                  const targetLabel =
+                    effectiveTarget === "title"
+                      ? "Título"
+                      : effectiveTarget === "impression"
+                      ? "Impressão"
+                      : "Sessão";
+                  const insertLabel =
+                    row.insert_mode === "before"
+                      ? "Acima"
+                      : row.insert_mode === "after"
+                      ? "Abaixo"
+                      : "Substitui";
                   return (
                     <TableRow key={row.id}>
                       <TableCell className="font-medium text-gray-100">{row.label}</TableCell>
@@ -373,6 +438,11 @@ export function QuickPhrasesManager() {
                       <TableCell className="text-gray-300">{row.modality || "-"}</TableCell>
                       <TableCell className="text-gray-300">{maskName || "-"}</TableCell>
                       <TableCell className="text-gray-300">{sectionName || "-"}</TableCell>
+                      <TableCell className="text-gray-300">
+                        {targetLabel}
+                        {row.subsection ? ` · ${row.subsection}` : ""}
+                        {` · ${insertLabel}`}
+                      </TableCell>
                       <TableCell className="text-gray-300">{row.usage_count ?? 0}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
@@ -440,6 +510,69 @@ export function QuickPhrasesManager() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
+                <Label className="text-gray-200">Tipo de alvo</Label>
+                <select
+                  value={form.target_type}
+                  onChange={(e) => {
+                    const next = e.target.value as FormValues["target_type"];
+                    setForm((prev) => ({
+                      ...prev,
+                      target_type: next,
+                      section_id: next === "section" ? prev.section_id : "",
+                    }));
+                  }}
+                  className="w-full h-10 rounded-md border border-[#1f1f1f] bg-[#111111] text-gray-100 px-3"
+                >
+                  <option value="section">Sessão / relatório</option>
+                  <option value="title">Título</option>
+                  <option value="impression">Impressão</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-gray-200">Posição ao aplicar</Label>
+                <select
+                  value={form.insert_mode}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      insert_mode: e.target.value as FormValues["insert_mode"],
+                    }))
+                  }
+                  className="w-full h-10 rounded-md border border-[#1f1f1f] bg-[#111111] text-gray-100 px-3"
+                >
+                  <option value="replace">Substituir linha</option>
+                  <option value="before">Inserir acima da linha</option>
+                  <option value="after">Inserir abaixo da linha</option>
+                  <option value="inline">Mesma linha (anexa)</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-gray-200">Subseção (opcional)</Label>
+                {subsectionOptions.length > 0 ? (
+                  <select
+                    value={form.subsection}
+                    onChange={(e) => setForm((prev) => ({ ...prev, subsection: e.target.value }))}
+                    className="w-full h-10 rounded-md border border-[#1f1f1f] bg-[#111111] text-gray-100 px-3"
+                  >
+                    <option value="">(digite ou escolha)</option>
+                    {subsectionOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+                <Input
+                  value={form.subsection}
+                  onChange={(e) => setForm((prev) => ({ ...prev, subsection: e.target.value }))}
+                  className="bg-[#111111] border-[#1f1f1f] text-gray-100"
+                  placeholder="Ex.: Dispositivos"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
                 <Label className="text-gray-200">Modalidade</Label>
                 <select
                   value={form.modality}
@@ -495,7 +628,7 @@ export function QuickPhrasesManager() {
                       section_id: e.target.value,
                     }))
                   }
-                  disabled={!form.mask_id}
+                  disabled={!form.mask_id || form.target_type !== "section"}
                   className="w-full h-10 rounded-md border border-[#1f1f1f] bg-[#111111] text-gray-100 px-3 disabled:opacity-50"
                 >
                   <option value="">Nenhuma</option>

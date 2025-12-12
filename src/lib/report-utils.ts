@@ -52,7 +52,31 @@ export function generateRawText(data: ReportGenerationData): string {
   return rawText
 }
 
+function normalizeReportBody(text: string): string {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+
+  const normalized: string[] = []
+  const isImpressionHeader = (line: string) => /^impress[aã]o/i.test(line)
+
+  lines.forEach((line, index) => {
+    if (isImpressionHeader(line) && normalized.length && normalized[normalized.length - 1] !== '') {
+      normalized.push('')
+    }
+    normalized.push(line)
+  })
+
+  while (normalized.length && normalized[normalized.length - 1] === '') {
+    normalized.pop()
+  }
+
+  return normalized.join('\n')
+}
+
 export function formatFinalReport(aiText: string, patientData: PatientData): string {
+  const normalizedBody = normalizeReportBody(aiText)
   let finalReport = 'RADIOGRAFIA DE TÓRAX\n\n'
 
   if (patientData.name) finalReport += `Paciente: ${patientData.name}\n`
@@ -63,8 +87,8 @@ export function formatFinalReport(aiText: string, patientData: PatientData): str
     finalReport += '\n'
   }
 
-  finalReport += aiText
-  finalReport += '\n\n'
+  finalReport += normalizedBody
+  finalReport += '\n'
   finalReport += `Data do laudo: ${new Date().toLocaleDateString('pt-BR')}\n`
   finalReport += `Hora: ${new Date().toLocaleTimeString('pt-BR')}`
 

@@ -93,6 +93,7 @@ export default function Page() {
   const [volA, setVolA] = useState("");
   const [volB, setVolB] = useState("");
   const [volC, setVolC] = useState("");
+  const [volUnit, setVolUnit] = useState<"cm3" | "ml">("cm3");
 
   const calcElipsoide = (a: string, b: string, c: string) => {
     const A = parseNum(a);
@@ -104,10 +105,13 @@ export default function Page() {
     return undefined;
   };
 
+  const formatVolume = (v: number) => v.toFixed(1).replace(".", ",");
+
   const fraseElipsoide = (a: string, b: string, c: string) => {
     const vol = calcElipsoide(a, b, c);
     if (vol !== undefined) {
-      return `${a} x ${b} x ${c} cm (APxLLxCC - volume estimado em ${vol.toFixed(0)} cm³).`;
+      const unitLabel = volUnit === "ml" ? "mL" : "cm³";
+      return `${a} x ${b} x ${c} cm (APxLLxCC - volume estimado em ${formatVolume(vol)} ${unitLabel}).`;
     }
     return "";
   };
@@ -370,10 +374,18 @@ export default function Page() {
           {/* 1. Volume elipsoide */}
           <div className="border border-[#222222] bg-[#111111] p-4 rounded">
             <h3 className="font-semibold mb-2 text-gray-100">Volume (0,52 × A × L × P)</h3>
-            <div className="flex gap-2 mb-2">
+            <div className="flex gap-2 mb-2 flex-wrap">
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-24" placeholder="AP (cm)" value={volA} onChange={(e) => setVolA(e.target.value)} />
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-24" placeholder="LL (cm)" value={volB} onChange={(e) => setVolB(e.target.value)} />
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-24" placeholder="CC (cm)" value={volC} onChange={(e) => setVolC(e.target.value)} />
+              <select
+                className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-28"
+                value={volUnit}
+                onChange={(e) => setVolUnit(e.target.value as "cm3" | "ml")}
+              >
+                <option value="cm3">cm³</option>
+                <option value="ml">mL</option>
+              </select>
             </div>
             {fraseElipsoide(volA, volB, volC) && (
               <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">

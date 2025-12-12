@@ -9,6 +9,9 @@ export interface QuickPhrase {
   label: string
   text: string
   keywords: string[]
+  target_type?: 'section' | 'title' | 'impression'
+  insert_mode?: 'replace' | 'before' | 'after' | 'inline'
+  subsection?: string
   section_id?: string
   mask_id?: string
   modality?: string
@@ -21,6 +24,7 @@ interface QuickPhrasesPanelProps {
   disabled?: boolean
   sections?: { id: string; title: string }[]
   onManage?: () => void
+  title?: string
 }
 
 const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
@@ -28,7 +32,8 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
   onSelectPhrase,
   disabled = false,
   sections = [],
-  onManage
+  onManage,
+  title = 'Frases'
 }) => {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
@@ -43,6 +48,11 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
 
   const renderPhraseButton = (phrase: QuickPhrase) => {
     const shortText = phrase.label?.trim() || phrase.text?.trim() || 'Frase'
+    const meta: string[] = []
+    if (phrase.subsection) meta.push(phrase.subsection)
+    if (phrase.insert_mode === 'before') meta.push('acima')
+    else if (phrase.insert_mode === 'after') meta.push('abaixo')
+    else if (phrase.insert_mode === 'inline') meta.push('mesma linha')
     return (
       <button
         key={phrase.id}
@@ -51,6 +61,7 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
         className="w-full text-left px-4 py-3 text-sm hover:bg-[#1a1a1a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors border-t border-[#222222] first:border-t-0"
       >
         <div className="font-medium text-gray-100">{shortText}</div>
+        {meta.length ? <div className="text-xs text-gray-500">{meta.join(' · ')}</div> : null}
       </button>
     )
   }
@@ -60,6 +71,15 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
       {sections.map((section) => {
         const sectionPhrases = phrases.filter((p) => p.section_id === section.id)
         const isOpen = expanded.has(section.id) || sectionPhrases.length === 0
+
+        // Agrupar por subseção para reduzir a lista
+        const groupedBySub = sectionPhrases.reduce<Record<string, QuickPhrase[]>>((acc, phrase) => {
+          const key = phrase.subsection?.trim() || 'sem-sub'
+          acc[key] = acc[key] || []
+          acc[key].push(phrase)
+          return acc
+        }, {})
+
         return (
           <div key={section.id} className="border border-[#222222] rounded-md overflow-hidden">
             <button
@@ -74,7 +94,25 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
                 {sectionPhrases.length === 0 ? (
                   <div className="px-4 py-3 text-xs text-gray-400">Nenhuma frase nesta seção.</div>
                 ) : (
-                  sectionPhrases.map(renderPhraseButton)
+                  Object.entries(groupedBySub).map(([subKey, list]) => {
+                    if (subKey === 'sem-sub') {
+                      return list.map(renderPhraseButton)
+                    }
+                    const subOpenId = `${section.id}::${subKey}`
+                    const subOpen = expanded.has(subOpenId)
+                    return (
+                      <div key={subKey} className="border-t border-[#1f1f1f]">
+                        <button
+                          onClick={() => toggle(subOpenId)}
+                          className="w-full px-3 py-2 bg-[#0f0f0f] hover:bg-[#161616] flex items-center justify-between transition-colors text-left"
+                        >
+                          <span className="text-sm font-medium text-gray-200">{subKey}</span>
+                          <span className="text-gray-500 text-xs">{subOpen ? '−' : '+'}</span>
+                        </button>
+                        {subOpen && <div>{list.map(renderPhraseButton)}</div>}
+                      </div>
+                    )
+                  })
                 )}
               </div>
             )}
@@ -104,7 +142,7 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
   return (
     <div className="bg-[#111111] rounded-lg border border-[#222222] p-4 h-full flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-100">Frases</h3>
+        <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
         {onManage ? (
           <Button
             variant="outline"

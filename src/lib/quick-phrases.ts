@@ -6,6 +6,9 @@ export interface QuickPhrase {
   label: string
   text: string
   keywords: string[]
+  target_type?: 'section' | 'title' | 'impression'
+  insert_mode?: 'replace' | 'before' | 'after' | 'inline'
+  subsection?: string
   mask_id?: string
   modality?: string
   exam_type?: string
@@ -67,7 +70,7 @@ export class QuickPhrasesService {
 
   static async addPhrase(
     phrase: Omit<QuickPhrase, 'id' | 'usage_count'>
-  ): Promise<QuickPhrase | null> {
+  ): Promise<QuickPhrase> {
     const { data, error } = await supabase
       .from('quick_phrases')
       .insert([phrase])
@@ -76,16 +79,16 @@ export class QuickPhrasesService {
 
     if (error) {
       console.error('Erro ao adicionar frase:', error)
-      return null
+      throw error
     }
 
-    return data
+    return data as QuickPhrase
   }
 
   static async updatePhrase(
     phraseId: string,
     updates: Partial<QuickPhrase>
-  ): Promise<QuickPhrase | null> {
+  ): Promise<QuickPhrase> {
     const { data, error } = await supabase
       .from('quick_phrases')
       .update(updates)
@@ -95,10 +98,10 @@ export class QuickPhrasesService {
 
     if (error) {
       console.error('Erro ao atualizar frase:', error)
-      return null
+      throw error
     }
 
-    return data
+    return data as QuickPhrase
   }
 
   static async deletePhrase(phraseId: string): Promise<boolean> {

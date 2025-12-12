@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
@@ -84,7 +84,7 @@ const EditorLaudosPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err)
-      setError('Erro ao carregar máscaras de laudos')
+      setError('Erro ao carregar m├íscaras de laudos')
     } finally {
       setLoading(false)
     }
@@ -169,7 +169,7 @@ const EditorLaudosPage: React.FC = () => {
     cleanedSections.forEach(({ id, text, line }) => renderLine(id, text, line))
 
     if (mask.show_impressao !== false && impressionLines.length) {
-      initialContent += `<p style="font-weight: bold; margin-top: 10pt; margin-bottom: 6pt;">IMPRESSÃO:</p>`
+      initialContent += `<p style="font-weight: bold; margin-top: 10pt; margin-bottom: 6pt;">IMPRESS├âO:</p>`
       impressionLines.forEach(({ id, text, line }) => renderLine(id, text, line, '2px 0 6px 0'))
     }
 
@@ -354,20 +354,20 @@ const EditorLaudosPage: React.FC = () => {
       .map((p) => (p.textContent || '').replace(/\u00a0/g, ' ').trim())
       .filter((t) => t.length > 0)
 
-    // Inserir espaçamento lógico no texto plano
+    // Inserir espa├ºamento l├│gico no texto plano
     const plainLines: string[] = []
     paragraphs.forEach((line, idx) => {
       if (idx === 0) {
-        plainLines.push(line, '') // título + linha em branco
+        plainLines.push(line, '') // t├¡tulo + linha em branco
       } else if (line.toUpperCase().startsWith('IMPRESS')) {
-        plainLines.push('', line) // quebra antes da impressão
+        plainLines.push('', line) // quebra antes da impress├úo
       } else {
         plainLines.push(line)
       }
     })
     const plainText = plainLines.join('\n').replace(/\n{3,}/g, '\n\n').trim()
 
-    // HTML limpo com estilos mínimos (título central 12pt negrito, corpo 11pt)
+    // HTML limpo com estilos m├¡nimos (t├¡tulo central 12pt negrito, corpo 11pt)
     const htmlContent = `<div style="font-family: Arial, sans-serif; font-size: 11pt; color: #000; line-height: 1.4;">
       ${paragraphs
         .map((text, idx) => {
@@ -422,15 +422,15 @@ const EditorLaudosPage: React.FC = () => {
       <div className="min-h-screen">
         <div className="container mx-auto px-4 py-6">
           <div className="mb-6 text-center">
-            <p className="text-gray-400 italic text-lg">Painel de frases e laudo dinâmico.</p>
+            <p className="text-gray-400 italic text-lg">Painel de frases e laudo din├ómico.</p>
             {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-4 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <div className="lg:col-span-3 space-y-4">
               <div className="bg-[#111111] rounded-lg border border-[#222222] p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold">Máscaras</h3>
+                  <h3 className="text-lg font-semibold">M├íscaras</h3>
                   <button
                     onClick={() => setShowConfig(true)}
                     className="text-sm px-3 py-1 rounded-md border border-[#222222] text-gray-100 hover:bg-[#161616]"
@@ -500,48 +500,53 @@ const EditorLaudosPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="lg:col-span-8 space-y-4">
-              <DictationArea
-                text={dictationText}
-                isListening={isListening}
-                isProcessing={isProcessingAI}
-                onTextChange={setDictationText}
-                onStartListening={startListening}
-                onStopListening={stopListening}
-                onProcessWithAI={handleProcessDictationWithAI}
-                onAddToReport={handleAddDictationToReport}
-                onClear={() => setDictationText('')}
-                disabled={!selectedMask}
-              />
-
-              <div className="bg-[#111111] rounded-lg border border-[#222222] p-4">
-                <div className="flex justify-between items-center mb-3 gap-2">
-                  <h3 className="text-lg font-semibold">Laudo Final</h3>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleResetReport}
-                      disabled={!selectedMask}
-                    className="px-4 py-2 bg-[#333333] text-white rounded-md hover:bg-[#444444] disabled:opacity-50"
-                  >
-                      ↻
-                    </button>
-                    <button
-                      onClick={handleCopyReport}
-                      disabled={!selectedMask}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-                    >
-                      Copiar
-                    </button>
-                  </div>
+                        <div className="lg:col-span-9 space-y-4">
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+                <div className="xl:col-span-4">
+                  <DictationArea
+                    text={dictationText}
+                    isListening={isListening}
+                    isProcessing={isProcessingAI}
+                    onTextChange={setDictationText}
+                    onStartListening={startListening}
+                    onStopListening={stopListening}
+                    onProcessWithAI={handleProcessDictationWithAI}
+                    onAddToReport={handleAddDictationToReport}
+                    onClear={() => setDictationText('')}
+                    disabled={!selectedMask}
+                    compact
+                  />
                 </div>
 
-                {selectedMask ? (
-                  <ReportEditor content={editorContent} onChange={setEditorContent} editable={true} />
-                ) : (
-                  <div className="border border-[#222222] rounded-lg bg-[#0f0f0f] p-12 text-center">
-                    <p className="text-gray-400">Selecione uma máscara</p>
+                <div className="xl:col-span-8 bg-[#111111] rounded-lg border border-[#222222] p-4">
+                  <div className="flex justify-between items-center mb-3 gap-2">
+                    <h3 className="text-lg font-semibold">Laudo Final</h3>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleResetReport}
+                        disabled={!selectedMask}
+                        className="px-4 py-2 bg-[#333333] text-white rounded-md hover:bg-[#444444] disabled:opacity-50"
+                      >
+                        Recarregar
+                      </button>
+                      <button
+                        onClick={handleCopyReport}
+                        disabled={!selectedMask}
+                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                      >
+                        Copiar
+                      </button>
+                    </div>
                   </div>
-                )}
+
+                  {selectedMask ? (
+                    <ReportEditor content={editorContent} onChange={setEditorContent} editable={true} />
+                  ) : (
+                    <div className="border border-[#222222] rounded-lg bg-[#0f0f0f] p-12 text-center">
+                      <p className="text-gray-400">Selecione uma máscara</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -553,7 +558,7 @@ const EditorLaudosPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-100">Gerenciar frases</h2>
-                  <p className="text-xs text-gray-400">Máscara: {selectedMask.exam_name || selectedMask.name}</p>
+                  <p className="text-xs text-gray-400">M├íscara: {selectedMask.exam_name || selectedMask.name}</p>
                 </div>
                 <button
                   onClick={() => {
@@ -568,7 +573,7 @@ const EditorLaudosPage: React.FC = () => {
 
               <div className="grid grid-cols-1 gap-3">
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-200">Seção</label>
+                  <label className="text-sm text-gray-200">Se├º├úo</label>
                   <select
                     value={formSection}
                     onChange={(e) => setFormSection(e.target.value)}
@@ -641,7 +646,7 @@ const EditorLaudosPage: React.FC = () => {
 
               <div className="border border-[#1f1f1f] rounded-lg overflow-hidden">
                 <div className="bg-[#161616] px-4 py-2 text-sm font-semibold text-gray-100">
-                  Frases desta mascara ({quickPhrases.length})
+                  Frases desta máscara ({quickPhrases.length})
                 </div>
                 <div className="max-h-64 overflow-y-auto divide-y divide-[#1f1f1f]">
                   {quickPhrases.length === 0 ? (
@@ -656,7 +661,7 @@ const EditorLaudosPage: React.FC = () => {
                           <div className="flex justify-between text-sm text-gray-300">
                             <span className="font-semibold text-gray-100">{p.label}</span>
                             <span className="text-xs text-gray-400">
-                              {sectionName}{lineTxt ? ` · linha ${lineTxt}` : ''}
+                              {sectionName}{lineTxt ? ` ┬À linha ${lineTxt}` : ''}
                             </span>
                           </div>
                           <p className="text-sm text-gray-200">{p.text}</p>
@@ -700,7 +705,7 @@ const EditorLaudosPage: React.FC = () => {
           <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex justify-center items-start p-4 pt-20">
             <div className="w-full max-w-5xl bg-[#0f0f0f] border border-[#1f1f1f] rounded-xl shadow-xl p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-100">Configurar máscaras</h2>
+                <h2 className="text-lg font-semibold text-gray-100">Configurar m├íscaras</h2>
                 <button
                   onClick={() => setShowConfig(false)}
                   className="text-sm text-gray-300 px-3 py-1 rounded-md border border-[#222222] hover:bg-[#161616]"
@@ -745,3 +750,10 @@ const EditorLaudosPage: React.FC = () => {
 }
 
 export default EditorLaudosPage
+
+
+
+
+
+
+
