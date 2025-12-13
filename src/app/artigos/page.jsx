@@ -54,7 +54,7 @@ export default function ArtigosPage() {
       <section className="text-center space-y-3">
         <h1 className="text-3xl md:text-4xl font-semibold"></h1>
         <p className="text-base md:text-lg text-slate-600 max-w-3xl mx-auto">
-          "Be loyal to your future, not your past"
+          &quot;Be loyal to your future, not your past&quot;
         </p>
         {aviso && <p className="text-amber-600 text-sm">⚠️ {aviso}</p>}
       </section>

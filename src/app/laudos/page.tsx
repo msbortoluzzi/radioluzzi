@@ -22,11 +22,8 @@ type AIInterpretResponse = {
 const ReportEditor = dynamic(() => import('@/components/ReportEditor'), {
   ssr: false,
   loading: () => (
-    <div className="border border-[#222222] rounded-lg bg-[#111111] p-6 min-h-[500px] flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-        <p className="text-gray-100 text-sm">Carregando editor...</p>
-      </div>
+    <div className="border border-[#1f1f1f] rounded-lg bg-[#0f0f0f] p-6 min-h-[400px] flex items-center justify-center">
+      <div className="text-center text-sm text-gray-300">Carregando editor...</div>
     </div>
   )
 })
@@ -50,6 +47,7 @@ const EditorLaudosPage: React.FC = () => {
   const [formLabel, setFormLabel] = useState('')
   const [formSection, setFormSection] = useState<string>('')
   const [formLine, setFormLine] = useState<string>('')
+  const [formInsertMode, setFormInsertMode] = useState<'replace' | 'before' | 'after' | 'inline'>('replace')
 
   const { isListening, startListening, stopListening } = useSpeechRecognition({
     lang: 'pt-BR',
@@ -84,7 +82,7 @@ const EditorLaudosPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err)
-      setError('Erro ao carregar m├íscaras de laudos')
+      setError('Erro ao carregar máscaras de laudos')
     } finally {
       setLoading(false)
     }
@@ -169,7 +167,7 @@ const EditorLaudosPage: React.FC = () => {
     cleanedSections.forEach(({ id, text, line }) => renderLine(id, text, line))
 
     if (mask.show_impressao !== false && impressionLines.length) {
-      initialContent += `<p style="font-weight: bold; margin-top: 10pt; margin-bottom: 6pt;">IMPRESS├âO:</p>`
+      initialContent += `<p style="font-weight: bold; margin-top: 10pt; margin-bottom: 6pt;">IMPRESSÃO:</p>`
       impressionLines.forEach(({ id, text, line }) => renderLine(id, text, line, '2px 0 6px 0'))
     }
 
@@ -232,23 +230,52 @@ const EditorLaudosPage: React.FC = () => {
 
       const lineKeyword = phrase.keywords?.find((k) => /^line:\d+$/i.test(k))
       const lineIndex = lineKeyword ? Number(lineKeyword.split(':')[1]) : undefined
+      const insertMode = (phrase.insert_mode as 'replace' | 'before' | 'after' | 'inline') || 'replace'
 
-      if (phrase.section_id) {
-        const updated = EditorSectionManager.replaceSectionContent(
-          editorContent,
-          phrase.section_id,
-          `<p>${phrase.text}</p>`,
-          sectionTitles,
-          lineIndex
-        )
-        setEditorContent(updated)
+      const resolvedSectionId = (() => {
+        if (phrase.section_id) return phrase.section_id
+        if (phrase.target_type === 'impression') {
+          const impressionSection = sections.find((s) => {
+            const id = (s.id || '').toString().toLowerCase()
+            const title = (s.title || '').toString().toLowerCase()
+            return id.includes('impress') || title.includes('impress')
+          })
+          if (impressionSection) return impressionSection.id
+        }
+        return null
+      })()
+
+      if (resolvedSectionId) {
+        setEditorContent((current) => {
+          const effectiveLine =
+            lineIndex !== undefined
+              ? lineIndex
+              : insertMode !== 'replace'
+                ? (() => {
+                    const temp = document.createElement('div')
+                    temp.innerHTML = current
+                    const count = temp.querySelectorAll(`[data-section="${resolvedSectionId}"]`).length
+                    if (insertMode === 'after') return (count || 0) + 1
+                    return 1
+                  })()
+                : undefined
+
+          return EditorSectionManager.replaceSectionContent(
+            current,
+            resolvedSectionId,
+            `<p>${phrase.text}</p>`,
+            sectionTitles,
+            effectiveLine,
+            insertMode
+          )
+        })
       } else {
         setEditorContent((prev) => prev + `<p>${phrase.text}</p>`)
       }
 
       void QuickPhrasesService.incrementUsage(phrase.id)
     },
-    [selectedMask, editorContent]
+    [selectedMask]
   )
 
   const handlePhraseDeleted = useCallback((id: string) => {
@@ -267,6 +294,7 @@ const EditorLaudosPage: React.FC = () => {
       label,
       text: formText.trim(),
       keywords: lineKeyword ? [lineKeyword] : [],
+      insert_mode: formInsertMode,
       mask_id: selectedMask.id,
       modality: selectedMask.modality,
       exam_type: selectedMask.exam_type,
@@ -290,8 +318,9 @@ const EditorLaudosPage: React.FC = () => {
     setFormText('')
     setFormLabel('')
     setFormLine('')
+    setFormInsertMode('replace')
     setShowPhraseManager(false)
-  }, [selectedMask, formText, formLabel, formLine, formSection, selectedSections, editingPhrase])
+  }, [selectedMask, formText, formLabel, formLine, formSection, selectedSections, editingPhrase, formInsertMode])
 
   const handleProcessDictationWithAI = useCallback(async () => {
     if (!dictationText.trim()) return
@@ -420,63 +449,82 @@ const EditorLaudosPage: React.FC = () => {
   return (
     <>
       <div className="min-h-screen">
-        <div className="container mx-auto px-4 py-6">
-          <div className="mb-6 text-center">
-            <p className="text-gray-400 italic text-lg">Painel de frases e laudo din├ómico.</p>
-            {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+        <div className="container mx-auto max-w-5xl px-4 py-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h1 className="text-2xl font-semibold text-gray-100">Editor de laudos</h1>
+            {error && <p className="text-sm text-red-400">{error}</p>}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            <div className="lg:col-span-3 space-y-4">
-              <div className="bg-[#111111] rounded-lg border border-[#222222] p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold">M├íscaras</h3>
-                  <button
-                    onClick={() => setShowConfig(true)}
-                    className="text-sm px-3 py-1 rounded-md border border-[#222222] text-gray-100 hover:bg-[#161616]"
-                  >
-                    Configurar
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {modalities.map((mod) => (
-                    <button
-                      key={mod}
-                      onClick={() => {
-                        setSelectedModality(mod)
-                        setSelectedMask(null)
-                        setQuickPhrases([])
-                        setEditorContent('')
-                      }}
-                      className={`px-3 py-1 rounded-md text-sm ${
-                        selectedModality === mod
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-[#0f0f0f] text-gray-100 border border-[#222222] hover:bg-[#1a1a1a]'
-                      }`}
-                    >
-                      {mod}
-                    </button>
-                  ))}
-                </div>
+          <div className="space-y-4">
+            <div className="rounded-lg border border-[#1f1f1f] bg-[#0f0f0f] p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-gray-100">Máscaras</h3>
+                <button
+                  onClick={() => setShowConfig(true)}
+                  className="text-sm px-3 py-1 rounded-md border border-[#1f1f1f] text-gray-100 hover:bg-[#151515]"
+                >
+                  Configurar
+                </button>
+              </div>
 
-                <div className="space-y-2">
-                  {filteredMasks.map((mask) => (
+              <div className="flex flex-wrap gap-2">
+                {modalities.map((mod) => (
+                  <button
+                    key={mod}
+                    onClick={() => {
+                      setSelectedModality(mod)
+                      setSelectedMask(null)
+                      setQuickPhrases([])
+                      setEditorContent('')
+                    }}
+                    className={`px-3 py-1 rounded-md text-sm border ${
+                      selectedModality === mod
+                        ? 'bg-blue-600 text-white border-blue-500'
+                        : 'bg-[#0f0f0f] text-gray-200 border-[#1f1f1f]'
+                    }`}
+                  >
+                    {mod}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                {filteredMasks.length ? (
+                  filteredMasks.map((mask) => (
                     <button
                       key={mask.id}
                       onClick={() => handleSelectMask(mask)}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm ${
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm border ${
                         selectedMask?.id === mask.id
-                          ? 'bg-blue-600 text-white border-2 border-blue-500'
-                          : 'bg-[#0f0f0f] text-gray-100 border border-[#222222] hover:bg-[#1a1a1a]'
+                          ? 'bg-blue-600 text-white border-blue-500'
+                          : 'bg-[#0f0f0f] text-gray-200 border-[#1f1f1f]'
                       }`}
                     >
                       {mask.name}
                     </button>
-                  ))}
-                </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-sm text-gray-400">Nenhuma máscara encontrada.</div>
+                )}
               </div>
+            </div>
 
-              <div className="sticky top-4">
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
+              <div className="xl:col-span-4 space-y-4">
+                <DictationArea
+                  text={dictationText}
+                  isListening={isListening}
+                  isProcessing={isProcessingAI}
+                  onTextChange={setDictationText}
+                  onStartListening={startListening}
+                  onStopListening={stopListening}
+                  onProcessWithAI={handleProcessDictationWithAI}
+                  onAddToReport={handleAddDictationToReport}
+                  onClear={() => setDictationText('')}
+                  disabled={!selectedMask}
+                  compact
+                />
+
                 {selectedMask ? (
                   <QuickPhrasesPanel
                     phrases={quickPhrases}
@@ -488,65 +536,46 @@ const EditorLaudosPage: React.FC = () => {
                       setFormText('')
                       setFormLabel('')
                       setFormLine('')
+                      setFormInsertMode('replace')
                       setFormSection(selectedSections[0]?.id || '')
                       setShowPhraseManager(true)
                     }}
                   />
                 ) : (
-                  <div className="bg-[#111111] rounded-lg border border-[#222222] p-4 text-sm text-gray-400">
+                  <div className="rounded-lg border border-[#1f1f1f] bg-[#0f0f0f] p-4 text-sm text-gray-400">
                     Selecione uma máscara para ver as frases.
                   </div>
                 )}
               </div>
-            </div>
 
-                        <div className="lg:col-span-9 space-y-4">
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-                <div className="xl:col-span-4">
-                  <DictationArea
-                    text={dictationText}
-                    isListening={isListening}
-                    isProcessing={isProcessingAI}
-                    onTextChange={setDictationText}
-                    onStartListening={startListening}
-                    onStopListening={stopListening}
-                    onProcessWithAI={handleProcessDictationWithAI}
-                    onAddToReport={handleAddDictationToReport}
-                    onClear={() => setDictationText('')}
-                    disabled={!selectedMask}
-                    compact
-                  />
-                </div>
-
-                <div className="xl:col-span-8 bg-[#111111] rounded-lg border border-[#222222] p-4">
-                  <div className="flex justify-between items-center mb-3 gap-2">
-                    <h3 className="text-lg font-semibold">Laudo Final</h3>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleResetReport}
-                        disabled={!selectedMask}
-                        className="px-4 py-2 bg-[#333333] text-white rounded-md hover:bg-[#444444] disabled:opacity-50"
-                      >
-                        Recarregar
-                      </button>
-                      <button
-                        onClick={handleCopyReport}
-                        disabled={!selectedMask}
-                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-                      >
-                        Copiar
-                      </button>
-                    </div>
+              <div className="xl:col-span-8 rounded-lg border border-[#1f1f1f] bg-[#0f0f0f] p-4 space-y-3">
+                <div className="flex justify-between items-center gap-2">
+                  <h3 className="text-base font-semibold text-gray-100">Laudo</h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleResetReport}
+                      disabled={!selectedMask}
+                      className="px-3 py-2 bg-[#1a1a1a] text-gray-100 rounded-md border border-[#1f1f1f] disabled:opacity-50"
+                    >
+                      Recarregar
+                    </button>
+                    <button
+                      onClick={handleCopyReport}
+                      disabled={!selectedMask}
+                      className="px-3 py-2 bg-blue-600 text-white rounded-md disabled:opacity-50"
+                    >
+                      Copiar
+                    </button>
                   </div>
-
-                  {selectedMask ? (
-                    <ReportEditor content={editorContent} onChange={setEditorContent} editable={true} />
-                  ) : (
-                    <div className="border border-[#222222] rounded-lg bg-[#0f0f0f] p-12 text-center">
-                      <p className="text-gray-400">Selecione uma máscara</p>
-                    </div>
-                  )}
                 </div>
+
+                {selectedMask ? (
+                  <ReportEditor content={editorContent} onChange={setEditorContent} editable={true} />
+                ) : (
+                  <div className="border border-[#1f1f1f] rounded-lg bg-[#0f0f0f] p-10 text-center">
+                    <p className="text-gray-400">Selecione uma máscara</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -558,7 +587,7 @@ const EditorLaudosPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-100">Gerenciar frases</h2>
-                  <p className="text-xs text-gray-400">M├íscara: {selectedMask.exam_name || selectedMask.name}</p>
+                  <p className="text-xs text-gray-400">Máscara: {selectedMask.exam_name || selectedMask.name}</p>
                 </div>
                 <button
                   onClick={() => {
@@ -573,7 +602,7 @@ const EditorLaudosPage: React.FC = () => {
 
               <div className="grid grid-cols-1 gap-3">
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-200">Se├º├úo</label>
+                  <label className="text-sm text-gray-200">Seção</label>
                   <select
                     value={formSection}
                     onChange={(e) => setFormSection(e.target.value)}
@@ -589,7 +618,7 @@ const EditorLaudosPage: React.FC = () => {
 
 
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-200">Rotulo curto</label>
+                  <label className="text-sm text-gray-200">Rótulo curto</label>
                   <input
                     value={formLabel}
                     onChange={(e) => setFormLabel(e.target.value)}
@@ -607,9 +636,24 @@ const EditorLaudosPage: React.FC = () => {
                     placeholder="Ex.: 1, 2, 3..."
                     inputMode="numeric"
                   />
-                  <p className="text-xs text-gray-500">
-                    Define qual linha da secao sera trocada. Deixe em branco para substituir a primeira.
-                  </p>
+                    <p className="text-xs text-gray-500">Deixe em branco para substituir a primeira linha.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-200">Como aplicar</label>
+                  <select
+                    value={formInsertMode}
+                    onChange={(e) =>
+                      setFormInsertMode((e.target.value as 'replace' | 'before' | 'after' | 'inline') || 'replace')
+                    }
+                    className="w-full h-10 rounded-md border border-[#1f1f1f] bg-[#111111] text-gray-100 px-3"
+                  >
+                    <option value="replace">Substituir linha</option>
+                    <option value="after">Inserir abaixo</option>
+                    <option value="before">Inserir acima</option>
+                    <option value="inline">Mesma linha</option>
+                  </select>
+                  <p className="text-xs text-gray-500">Escolha se substitui ou acrescenta à linha.</p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm text-gray-200">Texto para alterar</label>
@@ -629,6 +673,7 @@ const EditorLaudosPage: React.FC = () => {
                       setFormText('')
                       setFormLabel('')
                       setFormLine('')
+                      setFormInsertMode('replace')
                       setEditingPhrase(null)
                     }}
                     className="px-4 py-2 rounded-md border border-[#222222] text-gray-200 hover:bg-[#161616]"
@@ -661,10 +706,10 @@ const EditorLaudosPage: React.FC = () => {
                           <div className="flex justify-between text-sm text-gray-300">
                             <span className="font-semibold text-gray-100">{p.label}</span>
                             <span className="text-xs text-gray-400">
-                              {sectionName}{lineTxt ? ` ┬À linha ${lineTxt}` : ''}
+                              {sectionName}{lineTxt ? ` · linha ${lineTxt}` : ''}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-200">{p.text}</p>
+                  <p className="text-sm text-gray-200">{p.text}</p>
                           <div className="flex gap-2">
                             <button
                               onClick={() => {
@@ -673,6 +718,7 @@ const EditorLaudosPage: React.FC = () => {
                                 setFormLabel(p.label || '')
                                 setFormText(p.text || '')
                                 setFormLine(lineTxt || '')
+                                setFormInsertMode((p.insert_mode as 'replace' | 'before' | 'after' | 'inline') || 'replace')
                                 setShowPhraseManager(true)
                               }}
                               className="text-xs text-blue-400 hover:text-blue-200"
@@ -750,10 +796,3 @@ const EditorLaudosPage: React.FC = () => {
 }
 
 export default EditorLaudosPage
-
-
-
-
-
-
-

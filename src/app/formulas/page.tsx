@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+
+type Operator = "+" | "-" | "*" | "/";
 
 export default function Page() {
   const parseNum = (v: string) => parseFloat(v.replace(",", "."));
@@ -13,10 +16,15 @@ export default function Page() {
     alert("Copiado (Arial 11)!");
   };
 
-  // -------- Calculadora interativa --------
+  const links = [
+    { href: "/formulas/volume-testiculo-ovario", title: "Volume testicular/ovariano", desc: "0,523 x A x B x C (mL)." },
+    { href: "/formulas/volume-figado", title: "Volume hepatico (estimativa)", desc: "Passo a passo para estimar volume hepatico." }
+  ];
+
+  // Calculadora simples (sticky)
   const [n1, setN1] = useState("");
   const [n2, setN2] = useState("");
-  const [op, setOp] = useState<"+" | "-" | "*" | "/">("+");
+  const [op, setOp] = useState<Operator>("+");
   const [stage, setStage] = useState<"n1" | "n2" | "resultado">("n1");
   const [resultado, setResultado] = useState("");
 
@@ -29,12 +37,13 @@ export default function Page() {
       case "+": res = (a + b).toString(); break;
       case "-": res = (a - b).toString(); break;
       case "*": res = (a * b).toString(); break;
-      case "/": res = b !== 0 ? (a / b).toString() : "Divisão por zero"; break;
+      case "/": res = b !== 0 ? (a / b).toString() : "Divisao por zero"; break;
     }
     setResultado(res);
     setN1(res);
     setN2("");
     setStage("resultado");
+    return res;
   };
 
   const handleButton = (btn: string) => {
@@ -49,28 +58,17 @@ export default function Page() {
 
     if (["/", "*", "-", "+"].includes(btn)) {
       if (n2 !== "") {
-        const a = parseNum(n1);
-        const b = parseNum(n2);
-        let res = "";
-        switch (op) {
-          case "+": res = (a + b).toString(); break;
-          case "-": res = (a - b).toString(); break;
-          case "*": res = (a * b).toString(); break;
-          case "/": res = b !== 0 ? (a / b).toString() : "Divisão por zero"; break;
-        }
-        setN1(res);
+        const res = calcular();
+        if (res !== "") setN1(res);
         setN2("");
-        setResultado(res);
       }
-      setOp(btn as any);
+      setOp(btn as Operator);
       setStage("n2");
       return;
     }
 
     if (btn === "=") {
-      if (n1 !== "" && n2 !== "") {
-        calcular();
-      }
+      if (n1 !== "" && n2 !== "") calcular();
       return;
     }
 
@@ -89,7 +87,7 @@ export default function Page() {
     }
   };
 
-  // -------- Volume Elipsoide --------
+  // Volume elipsoide
   const [volA, setVolA] = useState("");
   const [volB, setVolB] = useState("");
   const [volC, setVolC] = useState("");
@@ -110,13 +108,13 @@ export default function Page() {
   const fraseElipsoide = (a: string, b: string, c: string) => {
     const vol = calcElipsoide(a, b, c);
     if (vol !== undefined) {
-      const unitLabel = volUnit === "ml" ? "mL" : "cm³";
-      return `${a} x ${b} x ${c} cm (APxLLxCC - volume estimado em ${formatVolume(vol)} ${unitLabel}).`;
+      const unitLabel = volUnit === "ml" ? "mL" : "cm3";
+      return `${a} x ${b} x ${c} cm (AP x LL x CC - volume estimado em ${formatVolume(vol)} ${unitLabel}).`;
     }
     return "";
   };
 
-  // -------- Porcentagem Flexível (ordem ajustada para Tab) --------
+  // Variacao percentual (1 a 3 medidas)
   const [percNumMedidas, setPercNumMedidas] = useState<1 | 2 | 3>(1);
   const [percBase1, setPercBase1] = useState("");
   const [percBase2, setPercBase2] = useState("");
@@ -166,12 +164,12 @@ export default function Page() {
     if (resultado) {
       const { variacao, somaBase, somaAtual } = resultado;
       const sinal = variacao > 0 ? "+" : "";
-      return `Base: ${somaBase.toFixed(1)} → Atual: ${somaAtual.toFixed(1)} | Variação: ${sinal}${variacao.toFixed(1)}%`;
+      return `Base: ${somaBase.toFixed(1)} | Atual: ${somaAtual.toFixed(1)} | Variacao: ${sinal}${variacao.toFixed(1)}%`;
     }
     return "";
   };
 
-  // -------- Regra de Três --------
+  // Regra de tres
   const [r3A, setR3A] = useState("");
   const [r3B, setR3B] = useState("");
   const [r3C, setR3C] = useState("");
@@ -189,12 +187,12 @@ export default function Page() {
   const fraseRegraTres = () => {
     const resultado = calcRegraTres();
     if (resultado) {
-      return `${r3A} está para ${r3B}, assim como ${r3C} está para ${resultado}`;
+      return `${r3A} esta para ${r3B}, assim como ${r3C} esta para ${resultado}`;
     }
     return "";
   };
 
-  // -------- Razão C/L --------
+  // Razao C/L
   const [clLongo, setClLongo] = useState("");
   const [clCurto, setClCurto] = useState("");
 
@@ -207,47 +205,7 @@ export default function Page() {
     return "";
   };
 
-  // -------- TFG (CKD-EPI) - sem peso --------
-  const [tfgIdade, setTfgIdade] = useState("");
-  const [tfgCr, setTfgCr] = useState("");
-  const [tfgSexo, setTfgSexo] = useState<"M" | "F">("M");
-
-  const calcTFG = () => {
-    const idade = parseNum(tfgIdade);
-    const cr = parseNum(tfgCr);
-    
-    if (!isNaN(idade) && !isNaN(cr) && cr > 0) {
-      const kappa = tfgSexo === "F" ? 0.7 : 0.9;
-      const alpha = tfgSexo === "F" ? -0.329 : -0.411;
-      const sexoFator = tfgSexo === "F" ? 1.018 : 1;
-      
-      const minRatio = Math.min(cr / kappa, 1);
-      const maxRatio = Math.max(cr / kappa, 1);
-      
-      const tfg = 141 * Math.pow(minRatio, alpha) * Math.pow(maxRatio, -1.209) * Math.pow(0.993, idade) * sexoFator;
-      
-      return tfg;
-    }
-    return undefined;
-  };
-
-  const fraseTFG = () => {
-    const tfg = calcTFG();
-    if (tfg !== undefined) {
-      let interpretacao = "";
-      if (tfg >= 90) interpretacao = "Normal";
-      else if (tfg >= 60) interpretacao = "Leve redução";
-      else if (tfg >= 45) interpretacao = "Leve a moderada redução";
-      else if (tfg >= 30) interpretacao = "Moderada a severa redução";
-      else if (tfg >= 15) interpretacao = "Severa redução";
-      else interpretacao = "Falência renal";
-      
-      return `TFG (CKD-EPI) = ${tfg.toFixed(1)} mL/min/1.73m² (${interpretacao})`;
-    }
-    return "";
-  };
-
-  // -------- RECIST 1.1 --------
+  // RECIST 1.1
   const [recistBase, setRecistBase] = useState("");
   const [recistAtual, setRecistAtual] = useState("");
 
@@ -266,21 +224,15 @@ export default function Page() {
     if (variacao !== undefined) {
       const sinal = variacao > 0 ? "+" : "";
       let interpretacao = "";
-      
-      if (variacao >= 20) {
-        interpretacao = " (Progressão - aumento ≥20%)";
-      } else if (variacao <= -30) {
-        interpretacao = " (Resposta Parcial - redução ≥30%)";
-      } else {
-        interpretacao = " (Doença Estável)";
-      }
-      
-      return `Variação: ${sinal}${variacao.toFixed(1)}%${interpretacao}`;
+      if (variacao >= 20) interpretacao = "Progressao (>=20%)";
+      else if (variacao <= -30) interpretacao = "Resposta parcial (<=-30%)";
+      else interpretacao = "Doenca estavel";
+      return `Variacao: ${sinal}${variacao.toFixed(1)}% (${interpretacao})`;
     }
     return "";
   };
 
-  // -------- ICT --------
+  // ICT
   const [ictCard, setIctCard] = useState("");
   const [ictTorax, setIctTorax] = useState("");
 
@@ -293,28 +245,7 @@ export default function Page() {
     return "";
   };
 
-  // -------- Dose de Contraste --------
-  const [contrastePeso, setContrastePeso] = useState("");
-  const [contrasteDose, setContrasteDose] = useState("1.5");
-
-  const calcContraste = () => {
-    const peso = parseNum(contrastePeso);
-    const dose = parseNum(contrasteDose);
-    if (!isNaN(peso) && !isNaN(dose)) {
-      return peso * dose;
-    }
-    return undefined;
-  };
-
-  const fraseContraste = () => {
-    const volume = calcContraste();
-    if (volume !== undefined) {
-      return `Volume de contraste: ${volume.toFixed(0)} mL (${contrasteDose} mL/kg)`;
-    }
-    return "";
-  };
-
-  // -------- Área de Superfície Corporal (BSA - Mosteller) --------
+  // BSA (Mosteller)
   const [bsaPeso, setBsaPeso] = useState("");
   const [bsaAltura, setBsaAltura] = useState("");
 
@@ -330,12 +261,12 @@ export default function Page() {
   const fraseBSA = () => {
     const bsa = calcBSA();
     if (bsa !== undefined) {
-      return `ASC (Mosteller) = ${bsa.toFixed(2)} m²`;
+      return `ASC (Mosteller) = ${bsa.toFixed(2)} m2`;
     }
     return "";
   };
 
-  // -------- IMC --------
+  // IMC
   const [imcPeso, setImcPeso] = useState("");
   const [imcAltura, setImcAltura] = useState("");
 
@@ -355,25 +286,35 @@ export default function Page() {
       if (imc < 18.5) classificacao = "Baixo peso";
       else if (imc < 25) classificacao = "Peso normal";
       else if (imc < 30) classificacao = "Sobrepeso";
-      else if (imc < 35) classificacao = "Obesidade grau I";
-      else if (imc < 40) classificacao = "Obesidade grau II";
-      else classificacao = "Obesidade grau III";
-      
-      return `IMC = ${imc.toFixed(1)} kg/m² (${classificacao})`;
+      else if (imc < 35) classificacao = "Obesidade I";
+      else if (imc < 40) classificacao = "Obesidade II";
+      else classificacao = "Obesidade III";
+      return `IMC = ${imc.toFixed(1)} kg/m2 (${classificacao})`;
     }
     return "";
   };
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 p-6 max-w-7xl mx-auto">
-      {/* Coluna principal com fórmulas */}
       <div className="flex-1">
-        <h1 className="text-2xl font-bold text-gray-100 mb-6">FÓRMULAS</h1>
+        <h1 className="text-2xl font-bold text-gray-100 mb-4">FORMULAS</h1>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="border border-[#222222] bg-[#111111] p-3 rounded hover:border-blue-600 transition-colors block"
+            >
+              <p className="text-sm font-semibold text-gray-100">{link.title}</p>
+              <p className="text-xs text-gray-400 mt-1">{link.desc}</p>
+            </Link>
+          ))}
+        </div>
 
         <div className="grid grid-cols-1 gap-4">
-          {/* 1. Volume elipsoide */}
           <div className="border border-[#222222] bg-[#111111] p-4 rounded">
-            <h3 className="font-semibold mb-2 text-gray-100">Volume (0,52 × A × L × P)</h3>
+            <h3 className="font-semibold mb-2 text-gray-100">Volume (0,52 x A x L x P)</h3>
             <div className="flex gap-2 mb-2 flex-wrap">
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-24" placeholder="AP (cm)" value={volA} onChange={(e) => setVolA(e.target.value)} />
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-24" placeholder="LL (cm)" value={volB} onChange={(e) => setVolB(e.target.value)} />
@@ -383,7 +324,7 @@ export default function Page() {
                 value={volUnit}
                 onChange={(e) => setVolUnit(e.target.value as "cm3" | "ml")}
               >
-                <option value="cm3">cm³</option>
+                <option value="cm3">cm3</option>
                 <option value="ml">mL</option>
               </select>
             </div>
@@ -397,38 +338,26 @@ export default function Page() {
             )}
           </div>
 
-          {/* 2. Porcentagem Flexível - ORDEM AJUSTADA */}
           <div className="border border-[#222222] bg-[#111111] p-4 rounded">
-            <h3 className="font-semibold mb-2 text-gray-100">Variação Percentual</h3>
+            <h3 className="font-semibold mb-2 text-gray-100">Variacao percentual</h3>
             <div className="flex gap-2 mb-3">
-              <button 
-                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 1 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-100'}`}
-                onClick={() => setPercNumMedidas(1)}
-              >
-                1 medida
-              </button>
-              <button 
-                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 2 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-100'}`}
-                onClick={() => setPercNumMedidas(2)}
-              >
-                2 medidas
-              </button>
-              <button 
-                className={`px-3 py-1 rounded text-sm ${percNumMedidas === 3 ? 'bg-blue-600 text-white' : 'bg-[#222222] text-gray-100'}`}
-                onClick={() => setPercNumMedidas(3)}
-              >
-                3 medidas
-              </button>
+              {[1, 2, 3].map((n) => (
+                <button
+                  key={n}
+                  className={`px-3 py-1 rounded text-sm ${percNumMedidas === n ? "bg-blue-600 text-white" : "bg-[#222222] text-gray-100"}`}
+                  onClick={() => setPercNumMedidas(n as 1 | 2 | 3)}
+                >
+                  {n} medida{n > 1 ? "s" : ""}
+                </button>
+              ))}
             </div>
-            
+
             <p className="text-xs text-gray-400 mb-2">Medidas iniciais:</p>
             <div className="space-y-2 mb-3">
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Base 1" value={percBase1} onChange={(e) => setPercBase1(e.target.value)} />
-              
               {percNumMedidas >= 2 && (
                 <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Base 2" value={percBase2} onChange={(e) => setPercBase2(e.target.value)} />
               )}
-              
               {percNumMedidas >= 3 && (
                 <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Base 3" value={percBase3} onChange={(e) => setPercBase3(e.target.value)} />
               )}
@@ -437,11 +366,9 @@ export default function Page() {
             <p className="text-xs text-gray-400 mb-2">Medidas atuais:</p>
             <div className="space-y-2">
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Atual 1" value={percAtual1} onChange={(e) => setPercAtual1(e.target.value)} />
-              
               {percNumMedidas >= 2 && (
                 <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Atual 2" value={percAtual2} onChange={(e) => setPercAtual2(e.target.value)} />
               )}
-              
               {percNumMedidas >= 3 && (
                 <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-full" placeholder="Atual 3" value={percAtual3} onChange={(e) => setPercAtual3(e.target.value)} />
               )}
@@ -457,10 +384,9 @@ export default function Page() {
             )}
           </div>
 
-          {/* 3. Regra de Três */}
           <div className="border border-[#222222] bg-[#111111] p-4 rounded">
-            <h3 className="font-semibold mb-2 text-gray-100">Regra de Três</h3>
-            <p className="text-xs text-gray-400 mb-2">A está para B, assim como C está para X</p>
+            <h3 className="font-semibold mb-2 text-gray-100">Regra de tres</h3>
+            <p className="text-xs text-gray-400 mb-2">A esta para B, assim como C esta para X</p>
             <div className="flex gap-2 mb-2">
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-20" placeholder="A" value={r3A} onChange={(e) => setR3A(e.target.value)} />
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-20" placeholder="B" value={r3B} onChange={(e) => setR3B(e.target.value)} />
@@ -469,7 +395,7 @@ export default function Page() {
             {calcRegraTres() && (
               <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
                 <p className="text-sm text-gray-100">X = {calcRegraTres()}</p>
-                <p className="text-xs mt-1">{fraseRegraTres()}</p>
+                <p className="text-xs mt-1 text-gray-300">{fraseRegraTres()}</p>
                 <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(`Resultado: ${calcRegraTres()}`)}>
                   Copiar
                 </button>
@@ -477,61 +403,35 @@ export default function Page() {
             )}
           </div>
 
-          {/* 4. Razão C/L */}
           <div className="border border-[#222222] bg-[#111111] p-4 rounded">
-            <h3 className="font-semibold mb-2 text-gray-100">Razão C/L (Comprimento ÷ Largura)</h3>
+            <h3 className="font-semibold mb-2 text-gray-100">Razao C/L (Comprimento / Largura)</h3>
             <div className="flex gap-2 mb-2">
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Eixo longo (cm)" value={clLongo} onChange={(e) => setClLongo(e.target.value)} />
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Eixo curto (cm)" value={clCurto} onChange={(e) => setClCurto(e.target.value)} />
             </div>
             {calcCL() && (
               <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
-                <p className="text-sm text-gray-100">Razão C/L = {calcCL()}</p>
-                <p className="text-sm text-gray-100">
-                  {parseFloat(calcCL()) >= 2 ? "Alongado (≥2)" : "Oval (<2)"}
-                </p>
+                <p className="text-sm text-gray-100">Razao C/L = {calcCL()}</p>
+                <p className="text-sm text-gray-100">{parseFloat(calcCL()) >= 2 ? "Alongado (>=2)" : "Oval (<2)"}</p>
               </div>
             )}
           </div>
 
-          {/* 5. TFG (CKD-EPI) */}
           <div className="border border-[#222222] bg-[#111111] p-4 rounded">
-            <h3 className="font-semibold mb-2 text-gray-100">TFG (CKD-EPI)</h3>
-            <p className="text-xs text-gray-400 mb-2">Taxa de Filtração Glomerular</p>
+            <h3 className="font-semibold mb-2 text-gray-100">RECIST 1.1 - Variacao tumoral</h3>
+            <p className="text-xs text-gray-400 mb-2">Soma dos diametros das lesoes-alvo</p>
             <div className="flex gap-2 mb-2">
-              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-20" placeholder="Idade" value={tfgIdade} onChange={(e) => setTfgIdade(e.target.value)} />
-              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Cr (mg/dL)" value={tfgCr} onChange={(e) => setTfgCr(e.target.value)} />
-              <select className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded" value={tfgSexo} onChange={(e) => setTfgSexo(e.target.value as "M" | "F")}>
-                <option value="M">M</option>
-                <option value="F">F</option>
-              </select>
-            </div>
-            {fraseTFG() && (
-              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
-                <p className="text-sm text-gray-100">{fraseTFG()}</p>
-                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(fraseTFG())}>
-                  Copiar
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* 6. RECIST 1.1 */}
-          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
-            <h3 className="font-semibold mb-2 text-gray-100">RECIST 1.1 - Variação Tumoral</h3>
-            <p className="text-xs text-gray-400 mb-2">Soma dos diâmetros das lesões-alvo</p>
-            <div className="flex gap-2 mb-2">
-              <input 
-                className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" 
-                placeholder="Medida basal (cm)" 
-                value={recistBase} 
-                onChange={(e) => setRecistBase(e.target.value)} 
+              <input
+                className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1"
+                placeholder="Medida basal (cm)"
+                value={recistBase}
+                onChange={(e) => setRecistBase(e.target.value)}
               />
-              <input 
-                className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" 
-                placeholder="Medida atual (cm)" 
-                value={recistAtual} 
-                onChange={(e) => setRecistAtual(e.target.value)} 
+              <input
+                className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1"
+                placeholder="Medida atual (cm)"
+                value={recistAtual}
+                onChange={(e) => setRecistAtual(e.target.value)}
               />
             </div>
             {fraseRECIST() && (
@@ -544,12 +444,11 @@ export default function Page() {
             )}
           </div>
 
-          {/* 7. ICT */}
           <div className="border border-[#222222] bg-[#111111] p-4 rounded">
-            <h3 className="font-semibold mb-2 text-gray-100">Índice Cardiotorácico (ICT)</h3>
+            <h3 className="font-semibold mb-2 text-gray-100">Indice Cardiotoracico (ICT)</h3>
             <div className="flex gap-2 mb-2">
-              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Diâmetro cardíaco (cm)" value={ictCard} onChange={(e) => setIctCard(e.target.value)} />
-              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Diâmetro torácico (cm)" value={ictTorax} onChange={(e) => setIctTorax(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Diametro cardiaco (cm)" value={ictCard} onChange={(e) => setIctCard(e.target.value)} />
+              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Diametro toracico (cm)" value={ictTorax} onChange={(e) => setIctTorax(e.target.value)} />
             </div>
             {calcICT() && (
               <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
@@ -561,27 +460,9 @@ export default function Page() {
             )}
           </div>
 
-          {/* 8. Dose de Contraste */}
           <div className="border border-[#222222] bg-[#111111] p-4 rounded">
-            <h3 className="font-semibold mb-2 text-gray-100">Dose de Contraste</h3>
-            <div className="flex gap-2 mb-2">
-              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Peso (kg)" value={contrastePeso} onChange={(e) => setContrastePeso(e.target.value)} />
-              <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded w-24" placeholder="mL/kg" value={contrasteDose} onChange={(e) => setContrasteDose(e.target.value)} />
-            </div>
-            {fraseContraste() && (
-              <div className="bg-[#0f0f0f] border border-[#222222] p-3 rounded">
-                <p className="text-sm text-gray-100">{fraseContraste()}</p>
-                <button className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors" onClick={() => copiar(fraseContraste())}>
-                  Copiar
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* 9. Área de Superfície Corporal */}
-          <div className="border border-[#222222] bg-[#111111] p-4 rounded">
-            <h3 className="font-semibold mb-2 text-gray-100">Área de Superfície Corporal (ASC)</h3>
-            <p className="text-xs text-gray-400 mb-2">Fórmula de Mosteller</p>
+            <h3 className="font-semibold mb-2 text-gray-100">Area de superficie corporal (ASC)</h3>
+            <p className="text-xs text-gray-400 mb-2">Formula de Mosteller</p>
             <div className="flex gap-2 mb-2">
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Peso (kg)" value={bsaPeso} onChange={(e) => setBsaPeso(e.target.value)} />
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Altura (cm)" value={bsaAltura} onChange={(e) => setBsaAltura(e.target.value)} />
@@ -596,9 +477,8 @@ export default function Page() {
             )}
           </div>
 
-          {/* 10. IMC - POR ÚLTIMO */}
           <div className="border border-[#222222] bg-[#111111] p-4 rounded">
-            <h3 className="font-semibold mb-2 text-gray-100">Índice de Massa Corporal (IMC)</h3>
+            <h3 className="font-semibold mb-2 text-gray-100">Indice de Massa Corporal (IMC)</h3>
             <div className="flex gap-2 mb-2">
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Peso (kg)" value={imcPeso} onChange={(e) => setImcPeso(e.target.value)} />
               <input className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-2 rounded flex-1" placeholder="Altura (m)" value={imcAltura} onChange={(e) => setImcAltura(e.target.value)} />
@@ -615,29 +495,24 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Calculadora fixa (sticky) */}
       <div className="w-full lg:w-64 lg:sticky lg:top-6 lg:self-start">
         <div className="border border-[#222222] p-3 rounded bg-[#111111] shadow-md">
           <h3 className="font-semibold mb-2 text-sm text-gray-100">Calculadora</h3>
           <div className="bg-[#0a0a0a] border border-[#333333] p-2 rounded mb-2 text-right text-lg font-mono text-gray-100">
-            {stage === "resultado"
-              ? resultado
-              : stage === "n1"
-              ? n1 || "0"
-              : n2 || "0"}
+            {stage === "resultado" ? resultado : stage === "n1" ? n1 || "0" : n2 || "0"}
           </div>
           <div className="grid grid-cols-4 gap-1">
-            {["7","8","9","/","4","5","6","*","1","2","3","-","0",".","C","+"].map((btn) => (
-              <button 
-                key={btn} 
-                onClick={() => handleButton(btn)} 
+            {["7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "C", "+"].map((btn) => (
+              <button
+                key={btn}
+                onClick={() => handleButton(btn)}
                 className="bg-[#222222] text-gray-100 rounded py-2 text-sm font-bold hover:bg-[#333333] transition-colors"
               >
-                {btn === "*" ? "×" : btn === "/" ? "÷" : btn}
+                {btn}
               </button>
             ))}
-            <button 
-              onClick={() => handleButton("=")} 
+            <button
+              onClick={() => handleButton("=")}
               className="col-span-4 bg-blue-600 text-white rounded py-2 text-sm font-bold hover:bg-blue-700 transition-colors mt-1"
             >
               =

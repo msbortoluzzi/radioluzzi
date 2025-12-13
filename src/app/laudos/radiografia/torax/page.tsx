@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
@@ -52,7 +52,7 @@ const ToraxDinamicoPage: React.FC = () => {
       setError(null);
 
       const exam = await SupabaseService.getExamBySlug("torax");
-      if (!exam) throw new Error("Exame de tórax não encontrado");
+      if (!exam) throw new Error("Exame de tÃ³rax nÃ£o encontrado");
 
       const structure = await SupabaseService.getExamStructure(exam.id);
       const examTemplate = await SupabaseService.getReportTemplate(exam.id);
@@ -151,7 +151,7 @@ const ToraxDinamicoPage: React.FC = () => {
   const copyReport = useCallback(() => {
     if (reportData?.finalReport && navigator.clipboard) {
       navigator.clipboard.writeText(reportData.finalReport);
-      alert("Laudo copiado para a área de transferência!");
+      alert("Laudo copiado para a Ã¡rea de transferÃªncia!");
     }
   }, [reportData?.finalReport]);
 
@@ -218,7 +218,7 @@ const ToraxDinamicoPage: React.FC = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                IA disponível
+                IA disponÃ­vel
               </div>
             </div>
           </div>
@@ -292,13 +292,13 @@ const ToraxDinamicoPage: React.FC = () => {
               ))}
 
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-4 text-lg font-semibold text-gray-900">Observações Adicionais</h2>
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">ObservaÃ§Ãµes Adicionais</h2>
                 <textarea
                   value={additionalNotes}
                   onChange={(e) => setAdditionalNotes(e.target.value)}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={4}
-                  placeholder="Digite observações adicionais..."
+                  placeholder="Digite observaÃ§Ãµes adicionais..."
                 />
               </div>
             </div>
@@ -370,18 +370,18 @@ const ToraxDinamicoPage: React.FC = () => {
                     </pre>
                   ) : (
                     <p className="italic text-gray-500">
-                      Selecione as opções e clique em "Gerar" para visualizar o laudo
+                      Selecione as opções e clique em &quot;Gerar&quot; para visualizar o laudo
                     </p>
                   )}
                 </div>
               </div>
 
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-semibold text-gray-900">Estatísticas</h3>
+                <h3 className="mb-4 text-lg font-semibold text-gray-900">EstatÃ­sticas</h3>
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
                     <div className="text-2xl font-bold text-blue-600">{selectedOptions.length}</div>
-                    <div className="text-sm text-gray-600">Opções Selecionadas</div>
+                    <div className="text-sm text-gray-600">OpÃ§Ãµes Selecionadas</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-green-600">
@@ -400,3 +400,5 @@ const ToraxDinamicoPage: React.FC = () => {
 };
 
 export default ToraxDinamicoPage;
+
+

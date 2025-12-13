@@ -36,8 +36,40 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
   title = 'Frases'
 }) => {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [activeModality, setActiveModality] = useState<string>('all')
+  const [search, setSearch] = useState<string>('')
 
   const hasSections = sections.length > 0
+
+  const modalityOrder = ['US', 'TC', 'RM', 'RX', 'MMG']
+  const modalitiesAvailable = Array.from(
+    new Set(
+      phrases
+        .map((p) => (p.modality || 'Outros').toUpperCase())
+        .concat(['all'])
+    )
+  )
+    .filter(Boolean)
+    .sort((a, b) => {
+      const ia = modalityOrder.indexOf(a)
+      const ib = modalityOrder.indexOf(b)
+      if (ia !== -1 && ib !== -1) return ia - ib
+      if (ia !== -1) return -1
+      if (ib !== -1) return 1
+      return a.localeCompare(b)
+    })
+
+  const filteredPhrases = phrases.filter((p) => {
+    const modalityTag = (p.modality || 'Outros').toUpperCase()
+    const matchesMod = activeModality === 'all' || modalityTag === activeModality
+    const term = search.trim().toLowerCase()
+    const matchesSearch =
+      term.length === 0 ||
+      (p.label || '').toLowerCase().includes(term) ||
+      (p.text || '').toLowerCase().includes(term) ||
+      (p.category || '').toLowerCase().includes(term)
+    return matchesMod && matchesSearch
+  })
 
   const toggle = (id: string) => {
     const next = new Set(expanded)
@@ -69,7 +101,7 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
   const renderSections = () => (
     <div className="space-y-2">
       {sections.map((section) => {
-        const sectionPhrases = phrases.filter((p) => p.section_id === section.id)
+        const sectionPhrases = filteredPhrases.filter((p) => p.section_id === section.id)
         const isOpen = expanded.has(section.id) || sectionPhrases.length === 0
 
         // Agrupar por subseção para reduzir a lista
@@ -120,7 +152,7 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
         )
       })}
 
-      {phrases.some((p) => !p.section_id) && (
+      {filteredPhrases.some((p) => !p.section_id) && (
         <div className="border border-[#222222] rounded-md overflow-hidden">
           <button
             onClick={() => toggle('outros')}
@@ -131,7 +163,7 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
           </button>
           {expanded.has('outros') && (
             <div className="bg-[#0f0f0f]">
-              {phrases.filter((p) => !p.section_id).map(renderPhraseButton)}
+              {filteredPhrases.filter((p) => !p.section_id).map(renderPhraseButton)}
             </div>
           )}
         </div>
@@ -159,10 +191,10 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
       <div className="flex-1 overflow-y-auto">
         {hasSections ? renderSections() : (
           <div className="space-y-1">
-            {phrases.length === 0 ? (
+            {filteredPhrases.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">Nenhuma frase cadastrada.</p>
             ) : (
-              phrases.map(renderPhraseButton)
+              filteredPhrases.map(renderPhraseButton)
             )}
           </div>
         )}
@@ -172,3 +204,4 @@ const QuickPhrasesPanel: React.FC<QuickPhrasesPanelProps> = ({
 }
 
 export default QuickPhrasesPanel
+

@@ -222,7 +222,7 @@ export default function LaudoTemplate({
               </pre>
             ) : (
               <p className="text-gray-500 italic">
-                Clique em "Gerar Laudo" para visualizar o resultado
+                Clique em &quot;Gerar Laudo&quot; para visualizar o resultado
               </p>
             )}
           </div>

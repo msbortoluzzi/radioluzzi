@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { supabase } from "@/lib/supabase-dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ type FormValues = {
   show_indicacao: boolean;
   show_impressao: boolean;
   show_relatorio: boolean;
+  tecnica_base?: string;
   relatorio_base?: string;
   impressao_base?: string;
 };
@@ -59,11 +60,12 @@ export function MaskManager() {
     show_indicacao: false,
     show_impressao: false,
     show_relatorio: true,
+    tecnica_base: "",
     relatorio_base: "",
     impressao_base: "",
   });
 
-  const loadModalities = async () => {
+  const loadModalities = useCallback(async () => {
     const { data, error } = await supabase.from("exam_types").select("modalidade, nome, ativo");
     if (error) {
       setFeedback(error.message);
@@ -83,9 +85,9 @@ export function MaskManager() {
         setForm((prev) => ({ ...prev, modality: list[0] }));
       }
     }
-  };
+  }, [form.modality]);
 
-  const loadMasks = async () => {
+  const loadMasks = useCallback(async () => {
     const { data, error } = await supabase
       .from("report_masks")
       .select("id, exam_name, modality, slug, active, show_indicacao, show_impressao, show_relatorio, sections")
@@ -106,12 +108,12 @@ export function MaskManager() {
         }))
       );
     }
-  };
+  }, []);
 
   useEffect(() => {
     void loadModalities();
     void loadMasks();
-  }, []);
+  }, [loadModalities, loadMasks]);
 
   const sortedMasks = useMemo(
     () => [...masks].sort((a, b) => a.exam_name.localeCompare(b.exam_name, "pt-BR")),
@@ -126,6 +128,7 @@ export function MaskManager() {
       show_indicacao: false,
       show_impressao: false,
       show_relatorio: true,
+      tecnica_base: "",
       relatorio_base: "",
       impressao_base: "",
     });
@@ -138,6 +141,7 @@ export function MaskManager() {
     const relatorioContent = relatorioLines.join("\n");
 
     const blocks = [
+      { id: "tecnica", title: "Técnica", content: form.tecnica_base, enabled: true },
       { id: "relatorio", title: "Relatório", content: relatorioContent, enabled: form.show_relatorio },
       { id: "impressao", title: "Impressão", content: form.impressao_base, enabled: form.show_impressao },
       { id: "indicacao", title: "Indicação clínica", content: "", enabled: form.show_indicacao },
@@ -218,6 +222,7 @@ export function MaskManager() {
       show_indicacao: !!row.show_indicacao,
       show_impressao: !!row.show_impressao,
       show_relatorio: row.show_relatorio ?? true,
+      tecnica_base: findContent("tecnica"),
       relatorio_base: relBase,
       impressao_base: findContent("impressao"),
     });
@@ -355,7 +360,7 @@ export function MaskManager() {
                   ))}
                 </select>
                 {modalities.length === 0 ? (
-                  <p className="text-xs text-red-400">Nenhuma modalidade ativa. Cadastre em "Tipos de exame".</p>
+                  <p className="text-xs text-red-400">Nenhuma modalidade ativa. Cadastre em &quot;Tipos de exame&quot;.</p>
                 ) : null}
               </div>
               <div className="space-y-2">
@@ -366,6 +371,16 @@ export function MaskManager() {
                   className="bg-[#111111] border-[#1f1f1f] text-gray-100"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-200">Cabeçalho / Técnica</Label>
+              <Textarea
+                value={form.tecnica_base}
+                onChange={(e) => setForm((prev) => ({ ...prev, tecnica_base: e.target.value }))}
+                className="min-h-[140px]"
+                placeholder={"Ex.: Aquisição, contraste, dado clínico informado..."}
+              />
             </div>
 
             <div className="space-y-3">
@@ -411,11 +426,11 @@ export function MaskManager() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            const next = relatorioLines.filter((_, i) => i !== idx);
-                            const normalized = next.length ? next : [""];
-                            setRelatorioLines(normalized);
-                            setForm((prev) => ({ ...prev, relatorio_base: normalized.join("\n") }));
+                      onClick={() => {
+                        const next = relatorioLines.filter((_, i) => i !== idx);
+                        const normalized = next.length ? next : [""];
+                        setRelatorioLines(normalized);
+                        setForm((prev) => ({ ...prev, relatorio_base: normalized.join("\n") }));
                           }}
                           className="shrink-0"
                         >
@@ -424,7 +439,7 @@ export function MaskManager() {
                       </div>
                     ))}
                     {relatorioLines.length === 0 ? (
-                      <div className="text-xs text-gray-500">Nenhuma linha. Clique em "+ Linha".</div>
+                      <div className="text-xs text-gray-500">Nenhuma linha. Clique em &quot;+ Linha&quot;.</div>
                     ) : null}
                   </div>
                 </div>

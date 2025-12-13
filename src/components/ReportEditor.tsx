@@ -1,14 +1,14 @@
-'use client'
+﻿'use client'
 
 import React from 'react'
 import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { TextStyle } from '@tiptap/extension-text-style'
-import { Color } from '@tiptap/extension-color'
 import FontFamily from '@tiptap/extension-font-family'
 import TextAlign from '@tiptap/extension-text-align'
 import Paragraph from '@tiptap/extension-paragraph'
+import Underline from '@tiptap/extension-underline'
 
 interface ReportEditorProps {
   content: string
@@ -93,12 +93,12 @@ const ReportEditor: React.FC<ReportEditorProps> = ({
           levels: [1, 2, 3]
         }
       }),
+      Underline,
       ParagraphWithMeta,
       Placeholder.configure({
         placeholder
       }),
       TextStyle,
-      Color,
       FontFamily.configure({
         types: ['textStyle']
       }),
@@ -144,11 +144,63 @@ const ReportEditor: React.FC<ReportEditorProps> = ({
   }
 
   const baseBtn = 'px-3 py-1 rounded text-sm bg-[#0f0f0f] text-gray-200 hover:bg-[#1f1f1f]'
+  const fontSizes = [
+    { label: 'Padrao', value: '' },
+    { label: '10', value: '10pt' },
+    { label: '11', value: '11pt' },
+    { label: '12', value: '12pt' },
+    { label: '14', value: '14pt' },
+    { label: '16', value: '16pt' },
+    { label: '18', value: '18pt' }
+  ]
+  const fontFamilies = [
+    { label: 'Padrao', value: '' },
+    { label: 'Arial', value: 'Arial, sans-serif' },
+    { label: 'Times', value: '"Times New Roman", serif' },
+    { label: 'Calibri', value: 'Calibri, sans-serif' },
+    { label: 'Georgia', value: 'Georgia, serif' }
+  ]
+
+  const applyFontFamily = (value: string) => {
+    if (value) editor.chain().focus().setFontFamily(value).run()
+    else editor.chain().focus().unsetFontFamily().run()
+  }
+
+  const applyFontSize = (value: string) => {
+    const chain = editor.chain().focus() as any // setTextStyle comes from TextStyle extension
+    if (value) chain.setTextStyle({ fontSize: value }).run()
+    else chain.unsetTextStyle().run()
+  }
 
   return (
     <div className="border border-[#222222] rounded-lg bg-[#0f0f0f] text-gray-100">
-      <div className="border-b border-[#222222] p-2 flex flex-wrap gap-2 bg-[#161616]">
-        <div className="flex gap-1">
+      <div className="border-b border-[#222222] p-2 flex flex-wrap gap-2 bg-[#161616] items-center">
+        <div className="flex gap-2">
+          <select
+            onChange={(e) => applyFontFamily(e.target.value)}
+            className="h-9 rounded-md bg-[#0f0f0f] border border-[#2a2a2a] text-sm text-gray-100 px-2"
+            defaultValue=""
+          >
+            {fontFamilies.map((f) => (
+              <option key={f.value || 'default-font'} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <select
+            onChange={(e) => applyFontSize(e.target.value)}
+            className="h-9 rounded-md bg-[#0f0f0f] border border-[#2a2a2a] text-sm text-gray-100 px-2 w-18"
+            defaultValue=""
+          >
+            {fontSizes.map((f) => (
+              <option key={f.value || 'default-size'} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex gap-1 border-l border-[#222222] pl-3">
           <button
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={`${baseBtn} font-semibold ${editor.isActive('bold') ? 'bg-blue-600 text-white' : ''}`}
@@ -159,7 +211,7 @@ const ReportEditor: React.FC<ReportEditorProps> = ({
           <button
             onClick={() => editor.chain().focus().toggleItalic().run()}
             className={`${baseBtn} italic ${editor.isActive('italic') ? 'bg-blue-600 text-white' : ''}`}
-            title="Itálico (Ctrl+I)"
+            title="Italico (Ctrl+I)"
           >
             I
           </button>
@@ -170,81 +222,102 @@ const ReportEditor: React.FC<ReportEditorProps> = ({
           >
             U
           </button>
+          <button
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={`${baseBtn} line-through ${editor.isActive('strike') ? 'bg-blue-600 text-white' : ''}`}
+            title="Tachado"
+          >
+            S
+          </button>
+          <button
+            onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
+            className={baseBtn}
+            title="Limpar formatacao"
+          >
+            Limpar
+          </button>
         </div>
 
-        <div className="flex gap-1 border-l border-[#222222] pl-2">
+        <div className="flex gap-1 border-l border-[#222222] pl-3">
           <button
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             className={`${baseBtn} ${editor.isActive('heading', { level: 1 }) ? 'bg-blue-600 text-white' : ''}`}
-            title="Título 1"
+            title="Titulo 1"
           >
             H1
           </button>
           <button
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             className={`${baseBtn} ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-600 text-white' : ''}`}
-            title="Título 2"
+            title="Titulo 2"
           >
             H2
           </button>
           <button
             onClick={() => editor.chain().focus().setParagraph().run()}
             className={`${baseBtn} ${editor.isActive('paragraph') ? 'bg-blue-600 text-white' : ''}`}
-            title="Parágrafo"
+            title="Paragrafo"
           >
             P
           </button>
         </div>
 
-        <div className="flex gap-1 border-l border-[#222222] pl-2">
+        <div className="flex gap-1 border-l border-[#222222] pl-3">
           <button
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             className={`${baseBtn} ${editor.isActive('bulletList') ? 'bg-blue-600 text-white' : ''}`}
             title="Lista com marcadores"
           >
-            • Lista
+            Lista
           </button>
           <button
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             className={`${baseBtn} ${editor.isActive('orderedList') ? 'bg-blue-600 text-white' : ''}`}
             title="Lista numerada"
           >
-            1. Lista
+            1.
           </button>
         </div>
 
-        <div className="flex gap-1 border-l border-[#222222] pl-2">
+        <div className="flex gap-1 border-l border-[#222222] pl-3">
           <button
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
             className={`${baseBtn} ${editor.isActive({ textAlign: 'left' }) ? 'bg-blue-600 text-white' : ''}`}
-            title="Alinhar à esquerda"
+            title="Alinhar a esquerda"
           >
-            ←
+            Esq
           </button>
           <button
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
             className={`${baseBtn} ${editor.isActive({ textAlign: 'center' }) ? 'bg-blue-600 text-white' : ''}`}
             title="Centralizar"
           >
-            ↔
+            Ctr
           </button>
           <button
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
             className={`${baseBtn} ${editor.isActive({ textAlign: 'right' }) ? 'bg-blue-600 text-white' : ''}`}
-            title="Alinhar à direita"
+            title="Alinhar a direita"
           >
-            →
+            Dir
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+            className={`${baseBtn} ${editor.isActive({ textAlign: 'justify' }) ? 'bg-blue-600 text-white' : ''}`}
+            title="Justificar"
+          >
+            Just
           </button>
         </div>
 
-        <div className="flex gap-1 border-l border-[#222222] pl-2 ml-auto">
+        <div className="flex gap-1 border-l border-[#222222] pl-3 ml-auto">
           <button
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
             className={`${baseBtn} disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Desfazer (Ctrl+Z)"
           >
-            ↺ Desfazer
+            Desfazer
           </button>
           <button
             onClick={() => editor.chain().focus().redo().run()}
@@ -252,12 +325,29 @@ const ReportEditor: React.FC<ReportEditorProps> = ({
             className={`${baseBtn} disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Refazer (Ctrl+Y)"
           >
-            ↻ Refazer
+            Refazer
           </button>
         </div>
       </div>
 
       <EditorContent editor={editor} />
+      <style jsx global>{`
+        .ProseMirror p {
+          margin: 0 !important;
+          line-height: 1.15;
+        }
+        .ProseMirror h1,
+        .ProseMirror h2,
+        .ProseMirror h3 {
+          margin: 6px 0 2px 0 !important;
+          line-height: 1.2;
+        }
+        .ProseMirror ul,
+        .ProseMirror ol {
+          margin: 2px 0 !important;
+          padding-left: 18px;
+        }
+      `}</style>
     </div>
   )
 }

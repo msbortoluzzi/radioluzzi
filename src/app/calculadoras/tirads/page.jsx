@@ -1,374 +1,270 @@
-// src/app/calculadoras/tirads/page.jsx
-"use client";
-import { useEffect, useState } from "react";
+"use client"
+
+import { useMemo, useState } from "react"
 
 const opcoes = {
-  composição: [
+  composicao: [
     { label: "Cística (0)", valor: 0, texto: "nódulo cístico" },
     { label: "Espongiforme (0)", valor: 0, texto: "nódulo espongiforme" },
     { label: "Misto (1)", valor: 1, texto: "nódulo misto sólido-cístico" },
-    { label: "Sólido (2)", valor: 2, texto: "nódulo sólido" },
+    { label: "Sólido (2)", valor: 2, texto: "nódulo sólido" }
   ],
   ecogenicidade: [
     { label: "Anecoico (0)", valor: 0, texto: "anecoico" },
     { label: "Iso/Hiperecogênico (1)", valor: 1, texto: "isoecogênico ou hiperecogênico" },
     { label: "Hipoecogênico (2)", valor: 2, texto: "hipoecogênico" },
-    { label: "Muito hipoecogênico (3)", valor: 3, texto: "muito hipoecogênico" },
+    { label: "Muito hipoecogênico (3)", valor: 3, texto: "muito hipoecogênico" }
   ],
   margens: [
-    { label: "Lisas (0)", valor: 0, texto: "com margens lisas" },
-    { label: "Mal definidas (0)", valor: 0, texto: "com margens mal definidas" },
-    { label: "Lobuladas/Irregulares (2)", valor: 2, texto: "com margens lobuladas/irregulares" },
-    { label: "Extensão extratireoidiana (3)", valor: 3, texto: "com extensão extratireoidiana" },
+    { label: "Lisas (0)", valor: 0, texto: "margens lisas" },
+    { label: "Mal definidas (0)", valor: 0, texto: "margens mal definidas" },
+    { label: "Lobuladas/Irregulares (2)", valor: 2, texto: "margens lobuladas/irregulares" },
+    { label: "Extensão extratireoidiana (3)", valor: 3, texto: "extensão extratireoidiana" }
   ],
   forma: [
     { label: "Larga > Alta (0)", valor: 0, texto: "mais largo que alto" },
-    { label: "Alta > Larga (3)", valor: 3, texto: "mais alto que largo" },
-  ],
-};
+    { label: "Alta > Larga (3)", valor: 3, texto: "mais alto que largo" }
+  ]
+}
 
-const FOCOS = [
+const focos = [
   { key: "comet", label: "Cauda de cometa (0)", valor: 0, texto: "cauda de cometa" },
-  { key: "macro", label: "Macrocalc. (1)",       valor: 1, texto: "macrocalcificações" },
-  { key: "rim",   label: "Periférica (2)",       valor: 2, texto: "calcificação periférica" },
-  { key: "micro", label: "Microcalc. (3)",       valor: 3, texto: "microcalcificações" },
-];
+  { key: "macro", label: "Macrocalc. (1)", valor: 1, texto: "macrocalcificações" },
+  { key: "rim", label: "Periférica (2)", valor: 2, texto: "calcificação periférica" },
+  { key: "micro", label: "Microcalc. (3)", valor: 3, texto: "microcalcificações" }
+]
 
-function getCategoria(pontos) {
-  if (pontos === 0) return "TR1";
-  if (pontos <= 2) return "TR2";          // 1–2
-  if (pontos === 3) return "TR3";
-  if (pontos <= 6) return "TR4";          // 4–6
-  return "TR5";                            // ≥7
+function categoriaPorPontos(pontos) {
+  if (pontos === 0) return "TR1"
+  if (pontos <= 2) return "TR2"
+  if (pontos === 3) return "TR3"
+  if (pontos <= 6) return "TR4"
+  return "TR5"
 }
 
-function condutaPorTR(tr, tamanhoCm) {
-  const s = Number((tamanhoCm || "").toString().replace(",", "."));
-  const TH = {
-    TR1: { fna: Infinity, fu: Infinity, fuPlan: "" },
-    TR2: { fna: Infinity, fu: Infinity, fuPlan: "" },
-    TR3: { fna: 2.5, fu: 1.5, fuPlan: "US em 1, 3 e 5 anos" },
-    TR4: { fna: 1.5, fu: 1.0, fuPlan: "US em 1, 2, 3 e 5 anos" },
-    TR5: { fna: 1.0, fu: 0.5, fuPlan: "US em 1, 2, 3 e 5 anos" },
-  };
-  const cfg = TH[tr] || TH.TR2;
-
-  if (s >= cfg.fna) return { tipo: "PAAF recomendada", detalhe: `Tamanho ${s.toFixed(1)} cm ≥ limiar PAAF (${cfg.fna} cm).` };
-  if (s >= cfg.fu) {
-    if (!isFinite(cfg.fu)) return { tipo: "Sem seguimento rotineiro", detalhe: "Categoria de baixo risco." };
-    return { tipo: "Seguimento por ultrassom", detalhe: `${cfg.fuPlan} (tamanho ${s.toFixed(1)} cm).` };
+function conduta(tr, tamanhoCm) {
+  const s = Number((tamanhoCm || "").toString().replace(",", "."))
+  const mapa = {
+    TR1: { fna: Infinity, fu: Infinity, plano: "" },
+    TR2: { fna: Infinity, fu: Infinity, plano: "" },
+    TR3: { fna: 2.5, fu: 1.5, plano: "US em 1, 3 e 5 anos" },
+    TR4: { fna: 1.5, fu: 1.0, plano: "US em 1, 2, 3 e 5 anos" },
+    TR5: { fna: 1.0, fu: 0.5, plano: "US em 1, 2, 3 e 5 anos" }
   }
-  return { tipo: "Sem seguimento rotineiro", detalhe: `Abaixo do limiar de seguimento (${isFinite(cfg.fu) ? `${cfg.fu} cm` : "—"}).` };
+  const cfg = mapa[tr] || mapa.TR2
+  if (!isFinite(cfg.fna)) return { tipo: "Sem seguimento rotineiro", detalhe: "Categoria de baixo risco." }
+  if (isNaN(s)) return { tipo: "Informar tamanho", detalhe: "Informe o maior diâmetro para sugerir conduta." }
+  if (s >= cfg.fna) return { tipo: "PAAF recomendada", detalhe: `Maior diâmetro ${s.toFixed(1)} cm (limiar ${cfg.fna} cm).` }
+  if (s >= cfg.fu) return { tipo: "Seguimento por ultrassom", detalhe: `${cfg.plano} (tamanho ${s.toFixed(1)} cm).` }
+  return { tipo: "Sem seguimento rotineiro", detalhe: "Abaixo dos limiares de seguimento." }
 }
 
-function maiorMedidaCm(medidas = []) {
-  const nums = medidas
-    .map((m) => parseFloat((m || "").toString().replace(",", ".")))
-    .filter((v) => !Number.isNaN(v));
-  if (nums.length === 0) return undefined;
-  return Math.max(...nums);
-}
+export default function TiradsPage() {
+  const [selecoes, setSelecoes] = useState({
+    composicao: null,
+    ecogenicidade: null,
+    margens: null,
+    forma: null,
+    focos: { comet: false, macro: false, rim: false, micro: false },
+    tamanho: "",
+    lobo: "",
+    istmo: "",
+    observacao: ""
+  })
 
-function defaultNodulo() {
-  return {
-    criterios: { composição: 1, ecogenicidade: 1, forma: 0, margens: 0, focos: 0 },
-    frases: {
-      composição: "nódulo misto sólido-cístico",
-      ecogenicidade: "isoecogênico ou hiperecogênico",
-      forma: "mais largo que alto",
-      margens: "com margens lisas",
-      focos: "sem microcalcificações",
-    },
-    medidas: ["", "", ""], // cm
-    lado: "",
-    terco: "",
-    istmo: false,
-    focosSel: { micro: false },
-  };
-}
+  const pontos = useMemo(() => {
+    let soma = 0
+    const { composicao, ecogenicidade, margens, forma, focos: f } = selecoes
+    soma += composicao?.valor ?? 0
+    soma += ecogenicidade?.valor ?? 0
+    soma += margens?.valor ?? 0
+    soma += forma?.valor ?? 0
+    Object.keys(f).forEach((k) => {
+      if (f[k]) soma += focos.find((foco) => foco.key === k)?.valor ?? 0
+    })
+    return soma
+  }, [selecoes])
 
-export default function Page() {
-  const [nodulos, setNodulos] = useState([]);
+  const categoria = useMemo(() => categoriaPorPontos(pontos), [pontos])
+  const condutaSug = useMemo(() => conduta(categoria, selecoes.tamanho), [categoria, selecoes.tamanho])
 
-  // cria N1 automaticamente com os padrões
-  useEffect(() => {
-    if (nodulos.length === 0) setNodulos([defaultNodulo()]);
-  }, []); // eslint-disable-line
+  const resumo = useMemo(() => {
+    const descr = []
+    if (selecoes.composicao) descr.push(selecoes.composicao.texto)
+    if (selecoes.ecogenicidade) descr.push(selecoes.ecogenicidade.texto)
+    if (selecoes.margens) descr.push(selecoes.margens.texto)
+    if (selecoes.forma) descr.push(selecoes.forma.texto)
+    const focosMarcados = focos.filter((f) => selecoes.focos[f.key])
+    if (focosMarcados.length) descr.push(focosMarcados.map((f) => f.texto).join(", "))
+    const loc = selecoes.lobo ? `no lobo ${selecoes.lobo}` : selecoes.istmo ? "no istmo" : ""
+    const tam = selecoes.tamanho ? `, medindo ${selecoes.tamanho} cm` : ""
+    const obs = selecoes.observacao ? ` ${selecoes.observacao}` : ""
+    return `Nódulo ${descricaoVazia(descr)} ${loc}${tam}. ${obs}`.replace("  ", " ").trim()
+  }, [selecoes])
 
-  function adicionar() {
-    setNodulos((prev) => [...prev, defaultNodulo()]);
-  }
-  function atualizar(index, campo, valor) {
-    setNodulos((prev) => {
-      const novos = [...prev];
-      novos[index][campo] = valor;
-      return novos;
-    });
-  }
-  function selecionar(index, criterio, valor, texto) {
-    setNodulos((prev) => {
-      const novos = [...prev];
-      novos[index].criterios[criterio] = valor;
-      novos[index].frases[criterio] = texto;
-      return novos;
-    });
+  function descricaoVazia(descr) {
+    const txt = descr.filter(Boolean).join(", ")
+    return txt || "tireoidiano"
   }
 
-  function toggleFoco(index, foco) {
-    setNodulos((prev) => {
-      const novos = [...prev];
-      const marcado = !!novos[index].focosSel[foco.key];
-      novos[index].focosSel[foco.key] = !marcado;
-
-      const ativos = FOCOS.filter((f) => novos[index].focosSel[f.key] && f.valor > 0);
-      const soma = ativos.reduce((acc, f) => acc + f.valor, 0);
-      novos[index].criterios["focos"] = soma;
-
-      const nomes = FOCOS.filter((f) => novos[index].focosSel[f.key] && f.valor > 0).map((f) => f.texto);
-      const temMicro = !!novos[index].focosSel["micro"];
-      if (nomes.length && !temMicro) novos[index].frases["focos"] = `com focos ecogênicos: ${nomes.join(", ")}, sem microcalcificações`;
-      else if (nomes.length)       novos[index].frases["focos"] = `com focos ecogênicos: ${nomes.join(", ")}`;
-      else                         novos[index].frases["focos"] = "sem microcalcificações";
-      return novos;
-    });
+  const copiar = () => {
+    const texto = `${resumo} Categoria ${categoria} (total ${pontos} pontos). ${condutaSug.tipo}. ${condutaSug.detalhe}`
+    void navigator.clipboard.writeText(texto)
   }
 
-  function semMicro(index) {
-    setNodulos((prev) => {
-      const novos = [...prev];
-      novos[index].focosSel["micro"] = false;
-
-      const ativos = FOCOS.filter((f) => novos[index].focosSel[f.key] && f.valor > 0);
-      const soma = ativos.reduce((acc, f) => acc + f.valor, 0);
-      novos[index].criterios["focos"] = soma;
-
-      const nomes = FOCOS.filter((f) => novos[index].focosSel[f.key] && f.valor > 0).map((f) => f.texto);
-      novos[index].frases["focos"] = nomes.length
-        ? `com focos ecogênicos: ${nomes.join(", ")}, sem microcalcificações`
-        : "sem microcalcificações";
-      return novos;
-    });
+  const toggleFoco = (key) => {
+    setSelecoes((prev) => ({
+      ...prev,
+      focos: { ...prev.focos, [key]: !prev.focos[key] }
+    }))
   }
 
-  function gerarFrase(n, i) {
-    const valores = Object.values(n.criterios);
-    const total = valores.length ? valores.reduce((acc, v) => acc + (Number(v) || 0), 0) : 0;
-    const categoria = getCategoria(total);
+  const Card = ({ title, children }) => (
+    <div className="rounded-lg border border-[#1f1f1f] bg-[#0f0f0f] p-4 space-y-2">
+      <p className="text-sm font-semibold text-gray-100">{title}</p>
+      {children}
+    </div>
+  )
 
-    let medidas = "";
-    const preenchidas = n.medidas.filter((m) => (m || "").trim() !== "");
-    if (preenchidas.length > 0) medidas = preenchidas.join(" x ") + " cm";
-
-    const partes = [];
-    if (n.frases.composição)   partes.push(n.frases.composição);
-    if (n.frases.ecogenicidade)partes.push(n.frases.ecogenicidade);
-    if (n.frases.forma)        partes.push(n.frases.forma);
-    if (n.frases.margens)      partes.push(n.frases.margens);
-    if (n.frases.focos)        partes.push(n.frases.focos);
-
-    let loc = "";
-    if (n.istmo) loc = `<strong>ISTMO</strong> da tireoide`;
-    else if (n.lado && n.terco)
-      loc = `terço <strong>${n.terco.toUpperCase()}</strong> do lobo tireoidiano <strong>${n.lado.toUpperCase()}</strong>`;
-
-    let frase = `<strong>N${i + 1}</strong>: ${partes.join(", ")}`;
-    if (loc) frase += `, localizado no ${loc}`;
-    if (medidas) frase += ` medindo ${medidas}`;
-    if (valores.length > 0) {
-      const num = categoria.replace("TR", "");
-      frase += ` (<strong>ACR TI-RADS ${num}</strong>)`;
-    }
-    return frase + ".";
-  }
-
-  function condutaTexto(n, i) {
-    const valores = Object.values(n.criterios);
-    const total = valores.length ? valores.reduce((acc, v) => acc + (Number(v) || 0), 0) : 0;
-    const tr = getCategoria(total);
-    const sizeMaior = maiorMedidaCm(n.medidas);
-    const c = condutaPorTR(tr, sizeMaior);
-    const sizeStr = sizeMaior != null ? `${sizeMaior.toFixed(1)} cm` : "—";
-    return `N${i + 1}: ${tr} | Maior diâmetro: ${sizeStr} | ${c.tipo}. ${c.detalhe}`;
-  }
+  const Chip = ({ active, onClick, children }) => (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1 text-xs rounded-md border ${
+        active ? "bg-blue-600 text-white border-blue-500" : "border-[#1f1f1f] text-gray-100"
+      }`}
+    >
+      {children}
+    </button>
+  )
 
   return (
-    <main className="p-6 max-w-4xl mx-auto space-y-6 text-gray-100">
-      <h1 className="text-2xl font-bold text-gray-100">TI-RADS (ACR)</h1>
+    <main className="p-6 space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold text-gray-100">TI-RADS</h1>
+        <p className="text-sm text-gray-400">Some pontos, veja a categoria e conduta sugerida.</p>
+      </div>
 
-      <button
-        onClick={adicionar}
-        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm transition-colors"
-      >
-        Adicionar nódulo
-      </button>
-
-      {nodulos.map((n, idx) => (
-        <div key={idx} className="border border-[#222222] p-4 rounded space-y-4">
-          {/* 1) Medidas */}
-          <div>
-            <h3 className="font-semibold">Medidas (cm)</h3>
-            <div className="flex gap-2">
-              {n.medidas.map((m, i) => (
-                <input
-                  key={i}
-                  value={m}
-                  onChange={(e) => {
-                    const novas = [...n.medidas];
-                    novas[i] = e.target.value;
-                    atualizar(idx, "medidas", novas);
-                  }}
-                  className="border border-[#333333] bg-[#0a0a0a] text-gray-100 p-1.5 rounded w-20 text-sm placeholder-gray-500"
-                  placeholder={i === 0 ? "Maior" : i === 1 ? "2º" : "3º"}
-                />
-              ))}
-            </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Card title="Composição">
+          <div className="flex flex-wrap gap-2">
+            {opcoes.composicao.map((o) => (
+              <Chip key={o.label} active={selecoes.composicao?.label === o.label} onClick={() => setSelecoes((p) => ({ ...p, composicao: o }))}>
+                {o.label}
+              </Chip>
+            ))}
           </div>
+        </Card>
 
-          {/* 2) Localização */}
-          <div>
-            <h3 className="font-semibold">Localização</h3>
-            <div className="flex flex-wrap gap-1">
-              <button
-                className={`border rounded px-2 py-1 text-xs ${n.istmo ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-                onClick={() => {
-                  atualizar(idx, "istmo", true);
-                  atualizar(idx, "terco", "");
-                  atualizar(idx, "lado", "");
-                }}
-              >
-                ISTMO
-              </button>
-              {!n.istmo && (
-                <>
-                  {["SUPERIOR", "MÉDIO", "INFERIOR"].map((t) => (
-                    <button
-                      key={t}
-                      className={`border rounded px-2 py-1 text-xs ${n.terco === t ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-                      onClick={() => {
-                        atualizar(idx, "terco", t);
-                        atualizar(idx, "istmo", false);
-                      }}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                  {["DIREITO", "ESQUERDO"].map((l) => (
-                    <button
-                      key={l}
-                      className={`border rounded px-2 py-1 text-xs ${n.lado === l ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-                      onClick={() => {
-                        atualizar(idx, "lado", l);
-                        atualizar(idx, "istmo", false);
-                      }}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </>
-              )}
-            </div>
+        <Card title="Ecogenicidade">
+          <div className="flex flex-wrap gap-2">
+            {opcoes.ecogenicidade.map((o) => (
+              <Chip key={o.label} active={selecoes.ecogenicidade?.label === o.label} onClick={() => setSelecoes((p) => ({ ...p, ecogenicidade: o }))}>
+                {o.label}
+              </Chip>
+            ))}
           </div>
+        </Card>
 
-          {/* 3) Características do nódulo */}
-          {Object.entries(opcoes).map(([criterio, lista]) => (
-            <div key={criterio}>
-              <h3 className="font-semibold capitalize">{criterio}</h3>
-              <div className="flex flex-wrap gap-1">
-                {lista.map((opcao, i) => (
-                  <button
-                    key={i}
-                    className={`px-2 py-1 text-xs border rounded ${
-                      n.frases[criterio] === opcao.texto
-                        ? "bg-blue-600 text-white border-blue-500"
-                        : "bg-[#222222] text-gray-100 border-[#333333]"
-                    }`}
-                    onClick={() => selecionar(idx, criterio, opcao.valor, opcao.texto)}
-                    title={opcao.label}
-                  >
-                    {opcao.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {/* 4) Focos ecogênicos (múltiplos) */}
-          <div>
-            <h3 className="font-semibold">Focos ecogênicos</h3>
-            <div className="flex flex-wrap gap-1">
-              {FOCOS.map((f) => {
-                const ativo = !!n.focosSel[f.key];
-                return (
-                  <button
-                    key={f.key}
-                    className={`px-2 py-1 text-xs border rounded ${ativo ? "bg-blue-600 text-white border-blue-500" : "bg-[#222222] text-gray-100 border-[#333333]"}`}
-                    onClick={() => toggleFoco(idx, f)}
-                    title={f.label}
-                  >
-                    {f.label}
-                  </button>
-                );
-              })}
-              <button
-                className="px-2 py-1 text-xs border border-[#333333] rounded bg-[#222222] text-gray-100 hover:bg-[#333333] transition-colors"
-                onClick={() => semMicro(idx)}
-                title="Desmarcar microcalcificações"
-              >
-                Sem microcalcificações
-              </button>
-            </div>
-            <p className="text-[11px] text-gray-400 mt-1">
-              • Pontos dos focos são <strong>aditivos</strong> (macro +1, periférico +2, micro +3; “cauda de cometa” = 0).<br />
-              • Nos demais critérios, selecione <strong>apenas uma</strong> opção.
-            </p>
+        <Card title="Margens">
+          <div className="flex flex-wrap gap-2">
+            {opcoes.margens.map((o) => (
+              <Chip key={o.label} active={selecoes.margens?.label === o.label} onClick={() => setSelecoes((p) => ({ ...p, margens: o }))}>
+                {o.label}
+              </Chip>
+            ))}
           </div>
-        </div>
-      ))}
+        </Card>
 
-      {/* Frases para laudo */}
-      {nodulos.length > 0 && (
-        <div className="border border-[#222222] p-4 rounded bg-[#111111] space-y-2">
-          <h3 className="font-semibold">Frases para laudo:</h3>
-          {nodulos.map((n, i) => (
-            <p
-              key={i}
-              className="text-sm"
-              dangerouslySetInnerHTML={{ __html: gerarFrase(n, i) }}
+        <Card title="Forma">
+          <div className="flex flex-wrap gap-2">
+            {opcoes.forma.map((o) => (
+              <Chip key={o.label} active={selecoes.forma?.label === o.label} onClick={() => setSelecoes((p) => ({ ...p, forma: o }))}>
+                {o.label}
+              </Chip>
+            ))}
+          </div>
+        </Card>
+
+        <Card title="Focos ecogênicos">
+          <div className="flex flex-wrap gap-2">
+            {focos.map((f) => (
+              <Chip key={f.key} active={selecoes.focos[f.key]} onClick={() => toggleFoco(f.key)}>
+                {f.label}
+              </Chip>
+            ))}
+          </div>
+        </Card>
+
+        <Card title="Localização e tamanho">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+            <input
+              placeholder="Lobo (D/E)"
+              value={selecoes.lobo}
+              onChange={(e) => setSelecoes((p) => ({ ...p, lobo: e.target.value }))}
+              className="rounded-md border border-[#1f1f1f] bg-[#0a0a0a] text-gray-100 px-3 py-2"
             />
-          ))}
+            <input
+              placeholder="Istmo (sim/não)"
+              value={selecoes.istmo}
+              onChange={(e) => setSelecoes((p) => ({ ...p, istmo: e.target.value }))}
+              className="rounded-md border border-[#1f1f1f] bg-[#0a0a0a] text-gray-100 px-3 py-2"
+            />
+            <input
+              placeholder="Tamanho (cm)"
+              value={selecoes.tamanho}
+              onChange={(e) => setSelecoes((p) => ({ ...p, tamanho: e.target.value }))}
+              className="rounded-md border border-[#1f1f1f] bg-[#0a0a0a] text-gray-100 px-3 py-2"
+            />
+          </div>
+          <input
+            placeholder="Observação (opcional)"
+            value={selecoes.observacao}
+            onChange={(e) => setSelecoes((p) => ({ ...p, observacao: e.target.value }))}
+            className="rounded-md border border-[#1f1f1f] bg-[#0a0a0a] text-gray-100 px-3 py-2 text-sm w-full"
+          />
+        </Card>
+      </div>
+
+      <div className="rounded-lg border border-[#1f1f1f] bg-[#0f0f0f] p-4 space-y-2">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-100">
+          <span className="px-3 py-1 rounded-md border border-[#1f1f1f]">Pontos: {pontos}</span>
+          <span className="px-3 py-1 rounded-md border border-[#1f1f1f]">Categoria: {categoria}</span>
+          <span className="px-3 py-1 rounded-md border border-[#1f1f1f]">Conduta: {condutaSug.tipo}</span>
+        </div>
+        <p className="text-xs text-gray-400">{condutaSug.detalhe}</p>
+        <div className="space-y-1">
+          <p className="text-xs text-gray-400">Pré-laudo</p>
+          <textarea
+            value={`${resumo} Categoria ${categoria} (total ${pontos} pontos). ${condutaSug.tipo}. ${condutaSug.detalhe}`}
+            onChange={() => {}}
+            className="w-full min-h-[120px] rounded-md border border-[#1f1f1f] bg-[#0a0a0a] text-gray-100 px-3 py-2 text-sm"
+            readOnly
+          />
+        </div>
+        <div className="flex gap-2">
+          <button onClick={copiar} className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700">
+            Copiar
+          </button>
           <button
             onClick={() =>
-              navigator.clipboard.writeText(
-                nodulos.map((n, i) => gerarFrase(n, i)).join("\n").replace(/<[^>]+>/g, "")
-              )
+              setSelecoes({
+                composicao: null,
+                ecogenicidade: null,
+                margens: null,
+                forma: null,
+                focos: { comet: false, macro: false, rim: false, micro: false },
+                tamanho: "",
+                lobo: "",
+                istmo: "",
+                observacao: ""
+              })
             }
-            className="mt-2 bg-blue-600 text-white px-3 py-1.5 rounded text-sm"
+            className="px-4 py-2 rounded-md border border-[#1f1f1f] text-gray-100 text-sm"
           >
-            Copiar todas
+            Limpar
           </button>
         </div>
-      )}
-
-      {/* Condutas — quadro separado */}
-      {nodulos.length > 0 && (
-        <div className="border border-[#222222] p-4 rounded bg-[#111111] space-y-2">
-          <h3 className="font-semibold">Condutas sugeridas (ACR TI-RADS):</h3>
-          {nodulos.map((n, i) => (
-            <p key={i} className="text-sm">
-              {condutaTexto(n, i)}
-            </p>
-          ))}
-          <button
-            onClick={() => navigator.clipboard.writeText(nodulos.map((n, i) => condutaTexto(n, i)).join("\n"))}
-            className="mt-2 bg-blue-600 text-white px-3 py-1.5 rounded text-sm"
-          >
-            Copiar condutas
-          </button>
-          <p className="text-[11px] text-gray-400">
-            * Ajuste conforme contexto clínico (idade, fatores de risco, sintomas compressivos, gestação, etc.).
-          </p>
-        </div>
-      )}
+      </div>
     </main>
-  );
+  )
 }

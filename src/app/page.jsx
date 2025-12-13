@@ -77,7 +77,7 @@ export default function HomePage() {
       <section className="text-center space-y-3">
         <h1 className="text-3xl md:text-4xl font-semibold text-gray-100">Radioluzzi</h1>
         <p className="text-base md:text-lg text-gray-400 max-w-3xl mx-auto">
-          "It only takes one win to change your trajectory"
+          &quot;It only takes one win to change your trajectory&quot;
         </p>
         {aviso && <p className="text-amber-400 text-sm">Aviso: {aviso}</p>}
       </section>
